@@ -63,7 +63,7 @@ class MyTwigExtension extends \Twig_Extension {
             $isId = TRUE;
         }
         if ($isId) {
-            $value = "ID" . $value;
+            $value = "id" . $value;
         } else {
             $value = lcfirst($value);
         }
