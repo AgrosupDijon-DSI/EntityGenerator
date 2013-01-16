@@ -1,0 +1,2 @@
+[paths]
+default = ssh://valerian@172.16.15.135/projets/entityGenerator
