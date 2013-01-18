@@ -81,6 +81,8 @@ class {{currentEntity.name|entityName}}
 {% set functionsTmp  %}
     {% include 'functions.php.twig' with {'attributeName':targetEntity.name|formatAttributeName,
                                          'attributeType':null,
+                                         'currentEntity': currentEntity,
+                                         'targetEntity': targetEntity,
                                          'attributeCardinality':relationshipCardinality} %}
 {% endset %}
 {% set functions = functions ~ functionsTmp %}

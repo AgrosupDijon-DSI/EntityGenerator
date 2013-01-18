@@ -21,10 +21,12 @@
 {% endif %}
 {% if attributeCardinality == "oneToOne" %}
 {% set attributeName = targetEntity.name|formatAttributeName %}
-     * @ORM\OneToOne(targetEntity="{{ targetEntity.name|entityName }}", inversedBy="{{attributeName}}", cascade={"persist", "merge"})
+{% set attributeType = targetEntity.name|entityName %}
+     * @ORM\OneToOne(targetEntity="{{ targetEntity.name|entityName }}", inversedBy="{{currentEntity.name|formatAttributeName}}", cascade={"persist", "merge"})
      * @ORM\JoinColumn(name="{{ currentEntity.name ~ '_' ~  currentEntity.getJoinColumName(targetEntity.getPrimaryKeyList()[0].id) }}", referencedColumnName="{{ targetEntity.getAttribute(targetEntity.getPrimaryKeyList()[0].id).name }}")
 {% elseif attributeCardinality == "ownerOneToOne" %}
-{% set attributeName = currentEntity.name|formatAttributeName %}
+{% set attributeName = targetEntity.name|formatAttributeName %}
+{% set attributeType = targetEntity.name|entityName %}
      * @ORM\OneToOne(targetEntity="{{ targetEntity.name|entityName }}", mappedBy="{{ currentEntity.name|formatAttributeName }}")
 {% elseif attributeCardinality == "null" %}
      * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%})
@@ -60,9 +62,9 @@
 {% endif %}
      *
 {% if (attributeCardinality == "oneToMany") or (attributeCardinality == "manyToMany")%}
-     * @var ArrayCollection({{ attributeType|entityName }}) ${{ attributeName }} {{attribute.comment|raw}}
+     * @var ArrayCollection({{ attributeType|entityName }}) ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
 {% else %}
-     * @var {{attributeType}} ${{ attributeName }} {{attribute.comment|raw}}
+     * @var {{attributeType}} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
 {% endif %}
 {% endif %}
      */

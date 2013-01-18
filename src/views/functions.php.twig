@@ -1,6 +1,6 @@
 {% macro getFunctionGet(attribute, attributeType, attributeName) %}
     /**
-     * @return {{ attributeType }} ${{ attributeName }} {{attribute.comment|raw}}
+     * @return {{ attributeType }} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
      */
     public function {{ attributeName|functionName('get') }}()
     {
@@ -9,7 +9,7 @@
 {% endmacro getFunctionGet %}
 {% macro getFunctionSet(currentEntity, attribute, attributeType, attributeName) %}
 /**
-     * @param {{attributeType}} ${{ attributeName }} {{attribute.comment|raw}}
+     * @param {{attributeType}} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
      * @return {{currentEntity.name|entityName}}
      */
     public function {{ attributeName|functionName('set') }}(${{ attributeName }})
@@ -63,11 +63,29 @@
 {{ _self.getFunctionGet(attribute, attributeType, (targetEntityName ~ "List")|formatAttributeName ) }}
 
 {% else %}
+{% if attributeCardinality == "ownerOneToOne" or attributeCardinality == "oneToOne" %}
+{% set attributeType = targetEntity.name|entityName %}
+/**
+     * @param {{ targetEntity.name|entityName }} ${{ targetEntity.name|formatAttributeName }}
+     * @return {{ currentEntity.name|entityName }}
+     */
+    public function {{ targetEntity.name|functionName('set') }}({{ targetEntity.name|entityName }} ${{ targetEntity.name|formatAttributeName }})
+    {
+        $this->{{ attributeName }} = ${{ targetEntity.name|formatAttributeName }};
+
+         if($this->{{ attributeName }}->{{ currentEntity.name|functionName('get') }}() !== $this) {
+            $this->{{ attributeName }}->{{ currentEntity.name|functionName('set') }}($this);
+        }
+        return $this;
+    }
+    
+{% else %}
 {{ _self.getFunctionSet(currentEntity, attribute, attributeType, attributeName) }}
+{% endif %}
 {{ _self.getFunctionGet(attribute, attributeType, attributeName) }}
 {% if attributeType == "boolean" and needIsOrHasFunction(attributeName) %}
     /**
-     * @return {{ attributeType }} ${{ attributeName }} {{attribute.comment|raw}}
+     * @return {{ attributeType }} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
      */
     public function {{ attributeName }}()
     {
