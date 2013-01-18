@@ -8,6 +8,8 @@ use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use EduterCNERTA\Engine\PowerAmcMPDParserEnginev2 as PowerAmcMPDParserEngine;
+use EduterCNERTA\Engine\EntityGenerator;
 
 //Instantiate our Console application
 $console = new Application('entity generator', '0.1');
@@ -55,7 +57,7 @@ $console->register('entity:generator')
             }
 
 
-            $engine = new \EduterCNERTA\Engine\PowerAmcMPDParserEngine($input->getOption('file'));
+            $engine = new PowerAmcMPDParserEngine($input->getOption('file'));
             $aParserResult = $engine->parseEntity();
 
             if(isset($aParserResult["infomationMessages"]) && $aParserResult["infomationMessages"] != "") {
@@ -66,7 +68,7 @@ $console->register('entity:generator')
                 exit;
             }
 
-            $entityGenerator = new EduterCNERTA\Engine\EntityGenerator();
+            $entityGenerator = new EntityGenerator();
             $entityGenerator->generateEntity($app, $aParserResult["entities"], $input->getOption('namespace'), $input->getOption('output'), $input->getOption('createRepository'));
 
 

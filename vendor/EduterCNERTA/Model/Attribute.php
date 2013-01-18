@@ -11,9 +11,9 @@ class Attribute
 {
 
     /**
-     * @var ID ID of the Attribute
+     * @var string id of the Attribute in the xml of mpd file
      */
-    private $ID;
+    private $id;
 
     /**
      * @var string Name/Code of attribute in camelCase
@@ -65,43 +65,25 @@ class Attribute
      * @var int The precision for a decimal (exact numeric) column (Applies only for decimal column)
      */
     private $precision;
-    private $cardinality;
-    private $relationEntity;
-    private $relationName;
-    private $relationAttribute;
 
-    function __construct()
-    {
+    /**
+     * @var string id of the Entity targeted
+     */
+    private $foreignKey;
 
-    }
-    public function getCardinality()
+    public function __construct()
     {
-        return $this->cardinality;
+        $this->foreignKey = null;
     }
 
-    public function setCardinality($cardinality)
+    public function getId()
     {
-        $this->cardinality = $cardinality;
+        return $this->id;
     }
 
-    public function getRelationEntity()
+    public function setId($id)
     {
-        return $this->relationEntity;
-    }
-
-    public function setRelationEntity($relationEntity)
-    {
-        $this->relationEntity = $relationEntity;
-    }
-
-        public function getID()
-    {
-        return $this->ID;
-    }
-
-    public function setID($ID)
-    {
-        $this->ID = $ID;
+        $this->id = $id;
     }
 
     public function getName()
@@ -194,17 +176,6 @@ class Attribute
         $this->isUnique = $isUnique;
     }
 
-    public function getRelationAttribute()
-    {
-        return $this->relationAttribute;
-    }
-
-    public function setRelationAttribute($relationAttribute)
-    {
-        $this->relationAttribute = $relationAttribute;
-    }
-
-
     public function getPrecision()
     {
         return $this->precision;
@@ -215,16 +186,20 @@ class Attribute
         $this->precision = $precision;
     }
 
-    public function getRelationName()
+    public function getForeignKey()
     {
-        return $this->relationName;
+        return $this->foreignKey;
     }
 
-    public function setRelationName($relationName)
+    public function setForeignKey($foreinKey)
     {
-        $this->relationName = $relationName;
+        $this->foreignKey = $foreinKey;
     }
 
+    public function isForeignKey()
+    {
+        return $this->foreignKey !== null;
+    }
 
 }
 

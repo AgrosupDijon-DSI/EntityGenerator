@@ -1,0 +1,69 @@
+{% if attribute.precision %} {# if the attribute has a precision/scale, the real type of the attribute is decimal #}
+    {% set attributeType = "decimal" %}
+{% endif %}
+{% if attributeLength %}
+{% set attributeLength = ", length=" ~ attributeLength %}
+{% endif %}
+
+    /**
+{%if attribute.isPrimary %}
+     * @ORM\Id
+{% if not currentEntity.hasCompositPrimaryKey %}
+{% set attributeName = attribute.name|formatAttributeName(true) %}
+     * @ORM\GeneratedValue(strategy="AUTO")
+{% else %}
+{% set attributeName = attribute.name|formatAttributeName() %}
+{% endif %}
+     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%}, unique={% if not currentEntity.hasCompositPrimaryKey %}true{%else%}false{%endif%})
+{% else %}
+{% if currentEntity.hasPrimaryKey == false or currentEntity.isThisEntityATernaryRelationshipBetweenManyEntity() %}
+     * @ORM\Id
+{% endif %}
+{% if attributeCardinality == "oneToOne" %}
+{% set attributeName = targetEntity.name|formatAttributeName %}
+     * @ORM\OneToOne(targetEntity="{{ targetEntity.name|entityName }}", inversedBy="{{attributeName}}", cascade={"persist", "merge"})
+     * @ORM\JoinColumn(name="{{ currentEntity.name ~ '_' ~  currentEntity.getJoinColumName(targetEntity.getPrimaryKeyList()[0].id) }}", referencedColumnName="{{ targetEntity.getAttribute(targetEntity.getPrimaryKeyList()[0].id).name }}")
+{% elseif attributeCardinality == "ownerOneToOne" %}
+{% set attributeName = currentEntity.name|formatAttributeName %}
+     * @ORM\OneToOne(targetEntity="{{ targetEntity.name|entityName }}", mappedBy="{{ currentEntity.name|formatAttributeName }}")
+{% elseif attributeCardinality == "null" %}
+     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%})
+{% elseif attributeCardinality == "manyToOne" %}
+{% set attributeType = targetEntity.name|entityName %}
+     * @ORM\ManyToOne(targetEntity="{{ attributeType }}", inversedBy="{{ currentEntity.name|formatAttributeName }}List", cascade={"persist", "merge"})
+     * @ORM\JoinColumns({
+{% for key in targetEntity.getPrimaryKeyList() %}
+     *  @ORM\JoinColumn(name="{{ currentEntity.getJoinColumName(key.id) }}", referencedColumnName="{{ targetEntity.getAttribute(key.id).name }}")
+{% endfor %}
+     * })
+{% elseif attributeCardinality == "oneToMany" %}
+{% set attributeName = attributeName|formatAttributeName ~ "List" %}
+{% set attributeType = targetEntity.name|entityName %}
+     * @ORM\OneToMany(targetEntity="{{ targetEntity.name|entityName }}", mappedBy="{{currentEntity.name|formatAttributeName}}", cascade={"persist", "remove", "merge"})
+{% elseif attributeCardinality == "ownerManyToMany" %}
+{% set attributeName = targetEntity.name|formatAttributeName ~ "List"  %}
+     * @ORM\ManyToMany(targetEntity="{{targetEntity.name|entityName}}", inversedBy="{{currentEntity.name|formatAttributeName}}List", cascade={"persist", "merge"})
+     * @ORM\JoinTable(name="{{relationShipEntity.name}}",
+{% for key in currentEntity.getPrimaryKeyList %}
+     *  joinColumns={@ORM\JoinColumn(name="{{ currentEntity.name ~ '_' ~  currentEntity.getAttribute(key.id).name }}", referencedColumnName="{{ targetEntity.getAttribute(targetEntity.getPrimaryKeyList()[0].id).name }}")},
+{% endfor %}
+{% for key in targetEntity.getPrimaryKeyList %}
+     *  inverseJoinColumns={@ORM\JoinColumn(name="{{ targetEntity.name ~ '_' ~  targetEntity.getAttribute(key.id).name }}", referencedColumnName="{{ currentEntity.getAttribute(currentEntity.getPrimaryKeyList()[0].id).name }}")}{% if not loop.last %},{% endif %}
+{% endfor %}
+     
+     * )
+{% elseif attributeCardinality == "manyToMany" %}
+{% set attributeName = targetEntity.name|formatAttributeName ~ "List"  %}
+     * @ORM\ManyToMany(targetEntity="{{targetEntity.name|entityName}}", mappedBy="{{currentEntity.name|formatAttributeName}}List", cascade={"persist", "merge"})
+{% else %}
+     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%})
+{% endif %}
+     *
+{% if (attributeCardinality == "oneToMany") or (attributeCardinality == "manyToMany")%}
+     * @var ArrayCollection({{ attributeType|entityName }}) ${{ attributeName }} {{attribute.comment|raw}}
+{% else %}
+     * @var {{attributeType}} ${{ attributeName }} {{attribute.comment|raw}}
+{% endif %}
+{% endif %}
+     */
+     protected ${{ attributeName }};

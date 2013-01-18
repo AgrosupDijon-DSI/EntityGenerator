@@ -1,42 +1,53 @@
 <?php
 
 namespace EduterCNERTA\TwigExtentions;
+
 use EduterCNERTA\Model\Attribute;
+use EduterCNERTA\Model\Entity;
 
-class MyTwigExtension extends \Twig_Extension {
+class MyTwigExtension extends \Twig_Extension
+{
 
-    public function __construct() {
+    public function __construct()
+    {
         
     }
 
     /**
      * @inherited
      */
-    public function getFilters() {
+    public function getFilters()
+    {
         return array(
             'entityName' => new \Twig_Filter_Method($this, 'twig_entityname_filter'),
             'functionName' => new \Twig_Filter_Method($this, 'twig_functionName_filter'),
-            'attributeName' => new \Twig_Filter_Method($this, 'twig_attributeName_filter')
+            'formatAttributeName' => new \Twig_Filter_Method($this, 'twig_attributeName_filter'),
+            'vardump' => new \Twig_Filter_Method($this, 'twig_vardump_filter',  array('is_safe' => array('html'))),
+            'printr' => new \Twig_Filter_Method($this, 'twig_printr_filter',  array('is_safe' => array('html'))),
         );
     }
 
     /**
      * @inherited
      */
-    public function getFunctions() {
+    public function getFunctions()
+    {
         return array(
-            'getJoinColumName' => new \Twig_Function_Method($this, 'getJoinColumName'),
+//            'getJoinColumName' => new \Twig_Function_Method($this, 'getJoinColumName'),
+            'needIsOrHasFunction' => new \Twig_Function_Method($this, 'needIsOrHasFunction'),
         );
     }
 
     /**
      * @inherited
      */
-    public function getName() {
+    public function getName()
+    {
         return 'bodTwigExt';
     }
 
-    public function twig_entityname_filter($value) {
+    public function twig_entityname_filter($value)
+    {
         $value = str_replace("_", " ", $value);
         $value = str_replace("-", " ", $value);
         $value = ucwords($value);
@@ -44,11 +55,13 @@ class MyTwigExtension extends \Twig_Extension {
         return $value;
     }
 
-    public function twig_functionName_filter($value, $prefix = "get") {
+    public function twig_functionName_filter($value, $prefix = "get")
+    {
         return $prefix . $this->twig_entityname_filter($value);
     }
 
-    public function twig_attributeName_filter($value, $isId = FALSE) {
+    public function twig_attributeName_filter($value, $isId = FALSE)
+    {
         $value = str_replace("_", " ", $value);
         $value = str_replace("-", " ", $value);
 
@@ -71,12 +84,52 @@ class MyTwigExtension extends \Twig_Extension {
         return $value;
     }
 
-    public function getJoinColumName(Attribute $attribute, $relationAttribute) {
-//        if ($attribute->getName() == $attribute->getRelationEntity()->getAttribute($attribute->getRelationAttribute())->getName()) {
-//            return $relationAttribute->getName() . "_" . $attribute->getName();
-//        } else {
-            return $attribute->getName();
-//        }
+    /**
+     * Affiche le contenue de la variable $value avec un print_r et met fin à l'exécution du script.
+     *
+     * @param \Twig_Environment $env
+     * @param mixed $value
+     */
+    public function twig_printr_filter($value, $exitOrNot = true)
+    {
+        ob_start();
+
+        echo "<pre>";
+        print_r($value);
+        echo "</pre>";
+        if ($exitOrNot) {
+            echo ob_get_clean();
+            exit;
+        }
+        return ob_get_clean();
+    }
+
+    /**
+     * Affiche le contenue de la variable $value avec un var_dump et met fin à l'exécution du script.
+     *
+     * @param \Twig_Environment $env
+     * @param mixed $value
+     */
+    public function twig_vardump_filter($value, $exitOrNot = true)
+    {
+        ob_start();
+
+        echo "<pre>";
+        var_dump($value);
+        echo "</pre>";
+        if ($exitOrNot) {
+            echo ob_get_clean();
+            exit;
+        }
+        return ob_get_clean();
+    }
+
+
+    public function needIsOrHasFunction($value)
+    {
+        $pattern = '/^(is|has)[A-Z0-9]{1,}/';
+
+        return (bool)preg_match($pattern, $value);
     }
 
 }

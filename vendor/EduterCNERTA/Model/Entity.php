@@ -11,9 +11,9 @@ class Entity
 {
 
     /**
-     * @var ID ID of the Entity
+     * @var string id of the Entity (id from the mdp of power amc)
      */
-    private $ID;
+    private $id;
 
     /**
      * @var string Name/Code of the Entity
@@ -28,33 +28,33 @@ class Entity
     /**
      * @var array Attribute Array of Attribute
      */
-    private $attributes;
+    private $attributeList;
 
     /**
-     * @var array
+     * @var array Relationship
      */
-    private $relations;
+    private $relationshipList;
 
     /**
-     * @var bool
+     * @var array of keys (primary)
      */
-    private $isOwner;
+    private $keyList;
 
-    /**
-     * @var bool
-     */
-    private $isTernary;
-
-    /**
-     * @var bool
-     */
-    private $hasCompositPrimaryKey;
-    
-    function __construct()
+    public function __construct()
     {
-        $this->attributes = array();
-        $this->relations = array();
-        $this->hasCompositPrimaryKey = FALSE;
+        $this->keyList = array();
+        $this->attributeList = array();
+        $this->relationshipList = array();
+    }
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    public function setId($id)
+    {
+        $this->id = $id;
     }
 
     public function getName()
@@ -77,85 +77,155 @@ class Entity
         $this->comment = $comment;
     }
 
-    public function getAttributes()
+    public function getAttributeList()
     {
-        return $this->attributes;
+        return $this->attributeList;
     }
 
-    public function setAttributes($attributes)
+    public function setAttributeList($attributeList)
     {
-        $this->attributes = $attributes;
+        $this->attributeList = $attributeList;
     }
 
     public function addAttribute(Attribute $attribute)
     {
-        $this->attributes[$attribute->getID()] = $attribute;
+        $this->attributeList[$attribute->getId()] = $attribute;
     }
 
-    public function getAttribute($Id)
+    public function getAttribute($id)
     {
-        return $this->attributes[$Id];
+        if (array_key_exists($id, $this->attributeList)) {
+            return $this->attributeList[$id];
+        }
+        return null;
     }
 
-    public function getAttributePK()
+    public function getRelationshipList()
     {
-        foreach ($this->attributes as $attribue) {
-            if ($attribue->getIsPrimary() === TRUE) {
-                return $attribue;
+        return $this->relationshipList;
+    }
+
+    public function setRelationshipList($relationshipList)
+    {
+        $this->relationshipList = $relationshipList;
+    }
+
+    public function addRelationship(Relationship $relationship)
+    {
+        $this->relationshipList[] = $relationship;
+    }
+
+    public function getKeyList()
+    {
+        return $this->keyList;
+    }
+
+    public function setKeyList($keyList)
+    {
+        $this->keyList = $keyList;
+    }
+
+    public function addKey(Key $key)
+    {
+        if (array_key_exists($key->getId(), $this->keyList)) {
+            $this->keyList[$key->getId()]->merge($key);
+        } else {
+            $this->keyList[$key->getId()] = $key;
+        }
+    }
+
+    public function getKey($id)
+    {
+        if (array_key_exists($id, $this->keyList)) {
+            return $this->keyList[$id];
+        }
+        return null;
+    }
+
+    public function getPrimaryKeyList()
+    {
+        $primaryKeyList = array();
+        foreach ($this->keyList as $key) {
+            if ($key->isPrimary()) {
+                $primaryKeyList[] = $key;
+            }
+        }
+        return $primaryKeyList;
+    }
+
+    public function hasPrimaryKey()
+    {
+        return count($this->getPrimaryKeyList()) > 0;
+    }
+
+    public function hasCompositPrimaryKey()
+    {
+        $nbPrimaryKey = 0;
+        /** @var $ey Key */
+        foreach ($this->keyList as $key) {
+            if ($key->isPrimary()) {
+                $nbPrimaryKey++;
+            }
+        }
+
+        return $nbPrimaryKey >= 2;
+    }
+
+    public function isARelationManyToManyBetweenTwoEntity()
+    {
+        if (count($this->attributeList) != count($this->keyList)) {
+            return false;
+        }
+
+        if (count(array_diff_key($this->attributeList, $this->keyList)) >= 1) {
+            return false;
+        }
+
+        return !$this->isThisEntityATernaryRelationshipBetweenManyEntity();
+    }
+
+    public function isThisEntityATernaryRelationshipBetweenManyEntity()
+    {
+
+        // When the entity is a ternary relation
+        $check = true;
+        foreach ($this->keyList as $key) {
+            $check = $check && ($key->isPrimary() && $key->isForeign());
+        }
+
+        if ($check) {
+            if (count($this->keyList) < 3) {
+                return false;
+            }
+        }
+
+        return $check;
+    }
+
+    public function getJoinColumName($attributeIdTargetEntity)
+    {
+        /** @var $key EduterCNERTA\Model\Key */
+        foreach ($this->getKeyList() as $key) {
+            if ($key->getAttributeIdTarget() === $attributeIdTargetEntity) {
+                return $this->getAttribute($key->getId())->getName();
             }
         }
     }
 
-    public function getRelations()
+    public function countAttributes()
     {
-        return $this->relations;
+        return count($this->attributeList);
     }
 
-    public function setRelations($type, Entity $entity)
+    public function getTheOtherPartOfTheRelationship($idEntityOfTheFirstPart)
     {
-        $this->relations[] = array("type" => $type, "entity" => $entity);
-    }
+        foreach ($this->relationshipList as $relationship) {
+            if ($relationship->getEntityOwner() != $idEntityOfTheFirstPart) {
+                return $relationship->getEntityOwner();
+            }
+        }
 
-    public function getID()
-    {
-        return $this->ID;
-    }
-
-    public function setID($ID)
-    {
-        $this->ID = $ID;
-    }
-
-    public function getIsOwner()
-    {
-        return $this->isOwner;
-    }
-
-    public function setIsOwner($isOwner)
-    {
-        $this->isOwner = $isOwner;
-    }
-
-    public function isTernary()
-    {
-        return $this->isTernary;
-    }
-
-    public function setIsTernary($isTernary)
-    {
-        $this->isTernary = $isTernary;
-    }
-
-    public function hasCompositPrimaryKey() {
-        return $this->hasCompositPrimaryKey;
-    }
-    
-    public function getHasCompositPrimaryKey() {
-        return $this->hasCompositPrimaryKey;
-    }
-
-    public function setHasCompositPrimaryKey($hasCompositPrimaryKey) {
-        $this->hasCompositPrimaryKey = $hasCompositPrimaryKey;
+        return null;
     }
 
 }

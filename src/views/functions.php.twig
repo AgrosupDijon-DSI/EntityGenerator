@@ -1,0 +1,78 @@
+{% macro getFunctionGet(attribute, attributeType, attributeName) %}
+    /**
+     * @return {{ attributeType }} ${{ attributeName }} {{attribute.comment|raw}}
+     */
+    public function {{ attributeName|functionName('get') }}()
+    {
+        return $this->{{ attributeName }};
+    }
+{% endmacro getFunctionGet %}
+{% macro getFunctionSet(currentEntity, attribute, attributeType, attributeName) %}
+/**
+     * @param {{attributeType}} ${{ attributeName }} {{attribute.comment|raw}}
+     * @return {{currentEntity.name|entityName}}
+     */
+    public function {{ attributeName|functionName('set') }}(${{ attributeName }})
+    {
+        $this->{{ attributeName }} = ${{ attributeName }};
+        return $this;
+    }
+{% endmacro getFunctionSet %}
+{% if attributeCardinality == "manyToMany" or attributeCardinality == "ownerManyToMany" or attributeCardinality == "oneToMany" %}
+{% if attributeCardinality == "manyToMany" or attributeCardinality == "ownerManyToMany" %}
+{% set attributeName = attributeName ~ "List" %}
+{% endif %}
+{% set targetEntityName = targetEntity.name|entityName %}
+{% set attributeType = "ArrayCollection(" ~ targetEntityName ~ ")" %}
+{% if attributeCardinality == "oneToMany" %}
+{% set targetAttributeName = currentEntity.name|entityName %}
+{% endif %}
+
+    /**
+     * @param {{ targetEntityName }} ${{ attributeName }}
+     * @return {{ currentEntity.name|entityName }}
+     */
+    public function add{{ targetEntityName }}({{ targetEntityName }} ${{ targetEntity.name|formatAttributeName }})
+    {
+        ${{ attributeName }}->set{{ targetAttributeName }}($this);
+
+        //If the object is already part of the collection, he is not added
+        if (!$this->{{ attributeName }}->contains(${{ targetEntity.name|formatAttributeName }})) {
+            $this->{{ attributeName }}->add(${{ targetEntity.name|formatAttributeName }});
+        }
+    }
+
+    /**
+     * @param Mix (ArrayCollection/{{ targetEntityName }}) $items
+     * @return {{ currentEntity.name|entityName }}
+     */
+    public function {{ attributeName|functionName('set') }}($items)
+    {
+        if ($items instanceof ArrayCollection) {
+            foreach ($items as $item) {
+                $this->{{ attributeName }}->add($item);
+            }
+        } elseif ($items instanceof {{ targetEntityName }}) {
+            $this->add{{ targetEntityName }}($items);
+        } else {
+            throw new \Exception("$items must be an instance of {{ targetEntityName }} or ArrayCollection");
+        }
+        return $this;
+    }
+
+{{ _self.getFunctionGet(attribute, attributeType, (targetEntityName ~ "List")|formatAttributeName ) }}
+
+{% else %}
+{{ _self.getFunctionSet(currentEntity, attribute, attributeType, attributeName) }}
+{{ _self.getFunctionGet(attribute, attributeType, attributeName) }}
+{% if attributeType == "boolean" and needIsOrHasFunction(attributeName) %}
+    /**
+     * @return {{ attributeType }} ${{ attributeName }} {{attribute.comment|raw}}
+     */
+    public function {{ attributeName }}()
+    {
+        return (boolean)$this->{{ attributeName }};
+    }
+    
+{% endif %}
+{% endif %}

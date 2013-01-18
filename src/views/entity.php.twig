@@ -1,216 +1,93 @@
 <?php
+{% spaceless %}
 {% set useDoctrineArrayCollection = "" %}
-{% for attribute in entity.attributes %}
-{% if ((attribute.cardinality == "manyToOne") or (attribute.cardinality == "oneToMany") or (attribute.cardinality == "manyToMany") or (attribute.cardinality == "ownerManyToMany")) %}
-{% if not attribute.isPrimary %}
-{% set useDoctrineArrayCollection = "use Doctrine\\Common\\Collections\\ArrayCollection;" %}
-{% endif %}
-{% endif %}
+{% for relationship in currentEntity.relationshipList %}
+    {% if ((relationship.cardinality == "manyToOne") or (relationship.cardinality == "oneToMany") or (relationship.cardinality == "manyToMany") or (relationship.cardinality == "ownerManyToMany")) %}
+        {# if entityOwner id is the same of the entity id #}
+        {% if not relationship.entityOwner == currentEntity.id %}
+            {% set useDoctrineArrayCollection = "use Doctrine\\Common\\Collections\\ArrayCollection;" %}
+        {% endif %}
+    {% endif %}
 {% endfor %}
 
 namespace {{namespace}}Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 {{useDoctrineArrayCollection}}
-{% spaceless %}
 /**
  * @ORM\Entity
- * @ORM\Entity(repositoryClass="{{namespace}}EntityRepository\{{entity.name|entityName}}Repository")
- * @ORM\Table(name="{{entity.name}}")
+ * @ORM\Entity(repositoryClass="{{namespace}}EntityRepository\{{currentEntity.name|entityName}}Repository")
+ * @ORM\Table(name="{{currentEntity.name}}")
  */
-class {{entity.name|entityName}}
+class {{currentEntity.name|entityName}}
 {
-{% for attribute in entity.attributes %}
-{% set attributeName = attribute.name|attributeName %}
-{% set attributeLength = "" %}
-{% set attributeType = attribute.type %}
-{% if attribute.precision %} {# if the attribute has a precision/scale, the real type of the attribute is decimal #}
-{% set attributeType = "decimal" %}
-{% endif %}
-{% if attribute.type == "decimal" or attribute.type == "float" or attribute.type == "double" %}
-{% set attributeLength %}{% if attribute.length %}, precision={{attribute.length}}{% endif %}{% if attribute.precision %}, scale={{attribute.precision}}{% endif %}{% endset %}
-{% elseif attribute.length %}
-{% set attributeLength = ", length=" ~ attribute.length %}
-{% endif %}
-    /**
-{%if attribute.isPrimary %}
-     * @ORM\Id
-{% if not entity.hasCompositPrimaryKey %}
-{% set attributeName = attribute.name|attributeName(TRUE) %}
-     * @ORM\GeneratedValue(strategy="AUTO")
-{% else %}
-{% set attributeName = attribute.name|attributeName() %}
-{% endif %}
-     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}TRUE{%else%}FALSE{%endif%}, unique={% if not entity.hasCompositPrimaryKey %}TRUE{%else%}FALSE{%endif%})
-{% else %}
-{% if attribute.cardinality == "oneToOne" %}
-{% set attributeName = attribute.relationEntity.name|attributeName ~ "s" %}
-     * @ORM\OneToOne(targetEntity="{{ attribute.relationEntity.name|entityName }}", cascade={"persist", "merge"})
-     * @ORM\JoinColumn(name="{{ getJoinColumName(attribute, attribute.relationEntity) }}", referencedColumnName="{{ attribute.relationEntity.attribute(attribute.relationAttribute).name }}")
-{% elseif attribute.cardinality == "null" %}
-     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}TRUE{%else%}FALSE{%endif%})
-{% elseif attribute.cardinality == "manyToOne" %}
-{% set attributeName = attribute.relationEntity.name|attributeName %}
-     * @ORM\ManyToOne(targetEntity="{{ attribute.relationEntity.name|entityName }}", cascade={"persist", "merge"})
-     * @ORM\JoinColumns({
-     *  @ORM\JoinColumn(name="{{ getJoinColumName(attribute, attribute.relationEntity) }}", referencedColumnName="{{ attribute.relationEntity.attribute(attribute.relationAttribute).name }}")
-     * })
-{% elseif attribute.cardinality == "oneToMany" %}
-{% set attributeName = attribute.relationEntity.name|attributeName ~ "s" %}
-     * @ORM\OneToMany(targetEntity="{{ attribute.relationEntity.name|entityName }}", mappedBy="{{entity.name|attributeName}}", cascade={"persist", "remove", "merge"})
-{% elseif attribute.cardinality == "ownerManyToMany" %}
-{% set attributeName = attribute.name|attributeName %}
-     * @ORM\ManyToMany(targetEntity="{{attribute.relationEntity.name|entityName}}", inversedBy="{{entity.name|attributeName}}List", cascade={"persist", "merge"})
-     * @ORM\JoinTable(name="{{attribute.relationName|entityName}}",
-     *   joinColumns={@ORM\JoinColumn(name="{{entity.attributePK.name}}", referencedColumnName="{{entity.attributePK.name}}")},
-     *   inverseJoinColumns={@ORM\JoinColumn(name="{{attribute.relationEntity.attributePK.name}}", referencedColumnName="{{attribute.relationEntity.attributePK.name}}")}
-     * )
-{% elseif attribute.cardinality == "manyToMany" %}
-{% set attributeName = attribute.name|attributeName %}
-     * @ORM\ManyToMany(targetEntity="{{attribute.relationEntity.name|entityName}}", mappedBy="{{entity.name|attributeName}}List", cascade={"persist", "merge"})
-{% else %}
-     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}TRUE{%else%}FALSE{%endif%})
-{% endif %}
-     *
-{% if (attribute.cardinality == "oneToMany") or (attribute.cardinality == "manyToMany")%}
-     * @var ArrayCollection {{ attribute.relationEntity.name|entityName }} ${{ attributeName }} {{attribute.comment|raw}}
-{% elseif (attribute.cardinality == "manyToOne") or (attribute.cardinality == "ownerManyToMany") %}
-     * @var {{ attribute.relationEntity.name|entityName }} ${{ attributeName }} {{attribute.comment|raw}}
-{% else %}
-     * @var {{attributeType}} ${{ attributeName }} {{attribute.comment|raw}}
-{% endif %}
-{% endif %}
-     */
-     protected ${{ attributeName }};
+{% endspaceless %}
+{% set functions = "" %}
+{% if currentEntity.isThisEntityATernaryRelationshipBetweenManyEntity() == false %}
+{% for attribute in currentEntity.attributeList %}
+{% if attribute.isForeignKey == false %}
+    {% include 'property.php.twig' with {'attributeName':attribute.name|formatAttributeName,
+                                         'attributeType':attribute.type,
+                                         'attributePrecision':attribute.precision,
+                                         'attributeLength':attribute.length,
+                                         'attributeCardinality':null} %}
 
-{% endfor %}
+{% set functionsTmp  %}
+    {% include 'functions.php.twig' with {'attributeName':attribute.name|formatAttributeName,
+                                         'attributeType':attribute.type,
+                                         'attributeCardinality':null} %}
+{% endset %}
+{% set functions = functions ~ functionsTmp %}
+
+{% endif %} {# attribute.isForeignKey == false #}
+{% endfor %} {# attribute #}
+{% endif %} 
+{% for relationship in currentEntity.relationshipList %}
+{% spaceless %}
+    {% set relationshipCardinality = relationship.cardinality %}
+    {% if relationship.entityOwner == currentEntity.id %}
+        {% set targetEntity = entityList.getEntityById(relationship.entityInRelationship) %}
+    {% else %}
+
+        {% set targetEntity = entityList.getEntityById(relationship.entityOwner) %}
+
+    {% endif %}
+
+    {# checks whether the entity is a targetEntity association, in the case of an association ManyToMany #}
+    {% if targetEntity.isARelationManyToManyBetweenTwoEntity() == true %}
+        {# Check who is the owner of the association #}
+        {% set ownerIdEntity = entityList.whoIsTheOwner(targetEntity) %}
+        {% set relationShipEntity = targetEntity %}
+
+        {% if ownerIdEntity == currentEntity.id %}
+            {% set relationshipCardinality = "ownerManyToMany" %}
+            {% set targetEntity = entityList.getEntityById(targetEntity.getTheOtherPartOfTheRelationship(ownerIdEntity)) %}
+        {% else %}
+            {% set relationshipCardinality = "manyToMany" %}
+            {% set targetEntity = entityList.getEntityById(ownerIdEntity) %}
+        {% endif %}
+    {% endif %}
 {% endspaceless %}
 
-{% for attribute in entity.attributes %}
-{% set attributeType = attribute.type %}
-{% if attribute.precision %} {# if the attribute has a precision/scale, the real type of the attribute is decimal #}
-    {% set attributeType = "decimal" %}
-{% endif %}
+    {% include 'property.php.twig' with {'attributeName':targetEntity.name|formatAttributeName,
+                                             'attributeType':null,
+                                             'attributePrecision':null,
+                                             'attributeLength':null,
+                                             'attributeCardinality':relationshipCardinality,
+                                             'currentEntity': currentEntity,
+                                             'targetEntity': targetEntity,
+                                             'relationShipEntity': relationShipEntity|default(null) } %}
 
-{% if ((attribute.cardinality == "manyToOne") or (attribute.cardinality == "oneToMany") or (attribute.cardinality == "manyToMany") or (attribute.cardinality == "ownerManyToMany")) %}
-{% if not attribute.isPrimary %}
-{% if ( (attribute.cardinality == "oneToMany") or (attribute.cardinality == "manyToMany") or (attribute.cardinality == "ownerManyToMany")) %}
+{% set functionsTmp  %}
+    {% include 'functions.php.twig' with {'attributeName':targetEntity.name|formatAttributeName,
+                                         'attributeType':null,
+                                         'attributeCardinality':relationshipCardinality} %}
+{% endset %}
+{% set functions = functions ~ functionsTmp %}
 
-    /**
-     * @param {{ attribute.relationEntity.name|entityName }} ${{ attribute.relationEntity.name|attributeName }} {{attribute.comment|raw}}
-     */
-    public function add{{ attribute.relationEntity.name|entityName }}({{ attribute.relationEntity.name|entityName }} ${{ attribute.relationEntity.name|attributeName }}) {
-    
-{% if (attribute.cardinality == "oneToMany") %}
-        ${{ attribute.relationEntity.name|attributeName }}->{{entity.name|functionName('set')}}($this);
-{% else %}
-        if(!${{ attribute.relationEntity.name|attributeName }}->{{entity.name|functionName('get')}}List()->contains($this)) {
-            ${{ attribute.relationEntity.name|attributeName }}->{{entity.name|functionName('get')}}List()->add($this);
-        }
-{% endif %}
-        
+{% endfor %} {# relationship in entity.relationshipList #}
 
-        //If the object is already part of the collection, he is not added
-        if (!$this->{{attribute.relationEntity.name|attributeName}}List->contains(${{ attribute.relationEntity.name|attributeName }})) {
-            $this->{{attribute.relationEntity.name|attributeName}}List->add(${{ attribute.relationEntity.name|attributeName }});
-        }
-    }
 
-    /**
-     * @param Mix (ArrayCollection/{{ attribute.relationEntity.name|entityName }}) $items {{attribute.comment|raw}}
-     * @return {{entity.name|entityName}}
-     */
-    public function set{{ attribute.relationEntity.name|entityName }}($items)
-    {
-        if ($items instanceof ArrayCollection) {
-            foreach ($items as $item) {
-                $this->{{attribute.relationEntity.name|attributeName}}List->add($item);
-            }
-        } elseif ($items instanceof {{ attribute.relationEntity.name|entityName }}) {
-            $this->add{{ attribute.relationEntity.name|entityName }}($items);
-        } else {
-            throw new \Exception("$items must be an instance of {{ attribute.relationEntity.name|entityName }} or ArrayCollection");
-        }
-        return $this;
-    }
+{{ functions|raw }}
 
-    /**
-     * @return ArrayCollection ${{attribute.relationEntity.name|attributeName}}List {{attribute.comment|raw}}
-     */
-    public function {{attribute.relationEntity.name|functionName('get')}}List() {
-        return $this->{{attribute.relationEntity.name|attributeName}}List;
-    }
-{% elseif attribute.cardinality == "manyToOne" %}
-    /**
-     * @param {{ attribute.relationEntity.name|entityName }} ${{ attribute.relationEntity.name|attributeName  }} {{attribute.comment|raw}}
-     * @return {{entity.name|entityName}}
-     */
-    public function {{ attribute.relationEntity.name|functionName('set') }}({{ attribute.relationEntity.name|entityName }} ${{ attribute.relationEntity.name|attributeName  }})
-    {
-        $this->{{ attribute.relationEntity.name|attributeName  }} = ${{ attribute.relationEntity.name|attributeName }};
-{% if entity.hasCompositPrimaryKey %}
-        $this->{{ getJoinColumName(attribute, attribute.relationEntity)|attributeName() }} = ${{ attribute.relationEntity.name|attributeName }}->{{ attribute.relationEntity.attributePK.name|functionName('get') }}();
-{% endif %}
-        return $this;
-    }
-
-    /**
-     * @return {{ attribute.relationEntity.name|entityName }} ${{ attribute.relationEntity.name|attributeName  }} {{attribute.comment|raw}}
-     */
-    public function {{ attribute.relationEntity.name|functionName('get') }}()
-    {
-        return $this->{{ attribute.relationEntity.name|attributeName  }};
-    }
-{% endif %}
-{% else %}
-    /**
-     * @param {{attributeType}} ${{ attribute.name|attributeName(attribute.isPrimary) }} {{attribute.comment|raw}}
-     * @return {{entity.name|entityName}}
-     */
-    public function {{ attribute.name|functionName('set') }}(${{ attribute.name|attributeName(attribute.isPrimary) }})
-    {
-        $this->{{ attribute.name|attributeName(attribute.isPrimary) }} = ${{ attribute.name|attributeName(attribute.isPrimary) }};
-        return $this;
-    }
-
-    /**
-     * @return {{attributeType}} ${{ attribute.name|attributeName(attribute.isPrimary) }} {{attribute.comment|raw}}
-     */
-    public function {{ attribute.name|functionName('get') }}()
-    {
-        return $this->{{ attribute.name|attributeName(attribute.isPrimary) }};
-    }
-{% endif %}
-
-{% else %}
-    /**
-     * @param {{attributeType}} ${{ attribute.name|attributeName(attribute.isPrimary) }} {{attribute.comment|raw}}
-     * @return {{entity.name|entityName}}
-     */
-    public function {{ attribute.name|functionName('set') }}(${{ attribute.name|attributeName(attribute.isPrimary) }})
-    {
-        $this->{{ attribute.name|attributeName(attribute.isPrimary) }} = ${{ attribute.name|attributeName(attribute.isPrimary) }};
-        return $this;
-    }
-
-    /**
-     * @return {{attributeType}} ${{ attribute.name|attributeName(attribute.isPrimary) }} {{attribute.comment|raw}}
-     */
-    public function {{ attribute.name|functionName('get') }}()
-    {
-        return $this->{{ attribute.name|attributeName(attribute.isPrimary) }};
-    }
-{% endif %}
-
-{% endfor %}
-
-    public function __construct() {
-{% for attribute in entity.attributes %}
-{% if (attribute.cardinality == "oneToMany") %}
-        $this->{{ attribute.relationEntity.name|attributeName }}List = new ArrayCollection();
-{% elseif ((attribute.cardinality == "manyToMany") or (attribute.cardinality == "ownerManyToMany")) %}
-        $this->{{ attribute.name|attributeName }} = new ArrayCollection();
-{% endif %}
-{% endfor %}
-    }
 }
