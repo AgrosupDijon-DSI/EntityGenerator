@@ -16,7 +16,7 @@ Is extract from tables models :
 - table code (a unique identifier of the table name), comment
 - columns name (a unique identifier of column name), type, length and comment
 
-After extraction, EntityGenerator create entities files who for each parameter has his annotation for use with Doctrine 2.
+After extraction, EntityGenerator create entities files who for each parameters has his annotation for use with Doctrine 2.
 And for each entity an EntityRepository is create.
 With this entities files we can easily create database with Doctrine's commands lines.
 
@@ -24,6 +24,9 @@ With this entities files we can easily create database with Doctrine's commands 
 EntityGenerator is only usable with commands lines.
 
 If your MPD has ManyToMany relations who own more than two relations, EntityGenerator will tell you what relations will not be created.
+
+Remember to check if the schema is correct with :
+`php app/console doctrine:schema:validate`
 
 [-> How it works in detail](src/doc/index.md)
 

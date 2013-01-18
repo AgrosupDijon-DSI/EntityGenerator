@@ -16,7 +16,7 @@ In this class we defined the mapping configuration for data types.
 You can easily add new data types or change the original mapping.
 
 ### Behaviors
-If a table has only primary key, the tool treats the table as the central point of a manyTomany relation.
+If a table has only primary key, the tool treats the table as the central point of a manyToMany relation.
 For determinate who is the owner of a manyToMany relation, we check which table has the most foreign key.
 
 Below are defined how the relationships between entities :
@@ -28,9 +28,9 @@ Below are defined how the relationships between entities :
 
 Transform generic data to entities
 ----------------------------------
-In a second time, the tool use the basic object model to create entities files and entities repositories file with two TWIG templates.
+In a second time, the tool use the basic object model to create entities files and entities repositories file with TWIG templates.
 
-"entity.php.twig" is the most copmplex template.
+"entity.php.twig" generate the entity
 It manages the creation of :
 - namespace
 - Parameters (and his comment)
