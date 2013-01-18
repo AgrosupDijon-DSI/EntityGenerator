@@ -55,20 +55,6 @@ In the future we hope we can manage manyToMany relation who own more than two re
 Order by name the propoerties
 Adding pre_persis and pre_update
 
-TODO URGENT : Pour avoir la précision exacte il faut aditionner la précision et le scale
-TODO dans la class SelectAlimPerso le code pour aliment est le suivant, mais le ID du JoinColumn est en double
-/**
-     * @ORM\ManyToOne(targetEntity="Aliment", cascade={"persist", "merge"})
-     * @ORM\JoinColumns({
-     *  @ORM\JoinColumn(name="ID", referencedColumnName="ID")
-     * })
-     *
-     * @var Aliment $aliment Identifiant auto
-     */
-     private $aliment;
-
-
-
 
 Change : 
 [2013-01-16] when a getter return an array, he is suffix with "List"
