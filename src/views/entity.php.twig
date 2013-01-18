@@ -1,12 +1,11 @@
 <?php
 {% spaceless %}
+{% set functions = "" %}
+{% set contructor = "" %}
 {% set useDoctrineArrayCollection = "" %}
 {% for relationship in currentEntity.relationshipList %}
-    {% if ((relationship.cardinality == "manyToOne") or (relationship.cardinality == "oneToMany") or (relationship.cardinality == "manyToMany") or (relationship.cardinality == "ownerManyToMany")) %}
-        {# if entityOwner id is the same of the entity id #}
-        {% if not relationship.entityOwner == currentEntity.id %}
-            {% set useDoctrineArrayCollection = "use Doctrine\\Common\\Collections\\ArrayCollection;" %}
-        {% endif %}
+    {% if ((relationship.cardinality == "oneToMany") or (relationship.cardinality == "manyToMany") or (relationship.cardinality == "ownerManyToMany")) %}
+        {% set useDoctrineArrayCollection = "use Doctrine\\Common\\Collections\\ArrayCollection;" %}
     {% endif %}
 {% endfor %}
 
@@ -14,6 +13,7 @@ namespace {{namespace}}Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 {{useDoctrineArrayCollection}}
+
 /**
  * @ORM\Entity
  * @ORM\Entity(repositoryClass="{{namespace}}EntityRepository\{{currentEntity.name|entityName}}Repository")
@@ -22,7 +22,6 @@ use Doctrine\ORM\Mapping as ORM;
 class {{currentEntity.name|entityName}}
 {
 {% endspaceless %}
-{% set functions = "" %}
 {% if currentEntity.isThisEntityATernaryRelationshipBetweenManyEntity() == false %}
 {% for attribute in currentEntity.attributeList %}
 {% if attribute.isForeignKey == false %}
@@ -87,9 +86,23 @@ class {{currentEntity.name|entityName}}
 {% endset %}
 {% set functions = functions ~ functionsTmp %}
 
+{% if relationshipCardinality == "oneToMany" or relationshipCardinality == "manyToMany" %}
+{% set contructorTmp  %}
+        $this->{{targetEntity.name|formatAttributeName }}List = new ArrayCollection();
+{% endset %}
+{% set contructor = contructor ~ contructorTmp %}
+{% endif %}
+
+
 {% endfor %} {# relationship in entity.relationshipList #}
 
+{% if contructor != "" %}
+    public function __construct()
+    {
+{{ contructor|raw }}
+    }
 
+{% endif %}
 {{ functions|raw }}
 
 }
