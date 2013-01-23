@@ -30,34 +30,28 @@ class {{currentEntity.name|entityName}}
                                          'attributePrecision':attribute.precision,
                                          'attributeLength':attribute.length,
                                          'attributeCardinality':null} %}
-
 {% set functionsTmp  %}
     {% include 'functions.php.twig' with {'attributeName':attribute.name|formatAttributeName,
                                          'attributeType':attribute.type,
                                          'attributeCardinality':null} %}
 {% endset %}
 {% set functions = functions ~ functionsTmp %}
-
 {% endif %} {# attribute.isForeignKey == false #}
 {% endfor %} {# attribute #}
-{% endif %} 
+{% endif %}
 {% for relationship in currentEntity.relationshipList %}
 {% spaceless %}
     {% set relationshipCardinality = relationship.cardinality %}
     {% if relationship.entityOwner == currentEntity.id %}
         {% set targetEntity = entityList.getEntityById(relationship.entityInRelationship) %}
     {% else %}
-
         {% set targetEntity = entityList.getEntityById(relationship.entityOwner) %}
-
     {% endif %}
-
     {# checks whether the entity is a targetEntity association, in the case of an association ManyToMany #}
     {% if targetEntity.isARelationManyToManyBetweenTwoEntity() == true %}
         {# Check who is the owner of the association #}
         {% set ownerIdEntity = entityList.whoIsTheOwner(targetEntity) %}
         {% set relationShipEntity = targetEntity %}
-
         {% if ownerIdEntity == currentEntity.id %}
             {% set relationshipCardinality = "ownerManyToMany" %}
             {% set targetEntity = entityList.getEntityById(targetEntity.getTheOtherPartOfTheRelationship(ownerIdEntity)) %}
@@ -67,7 +61,6 @@ class {{currentEntity.name|entityName}}
         {% endif %}
     {% endif %}
 {% endspaceless %}
-
     {% include 'property.php.twig' with {'attributeName':targetEntity.name|formatAttributeName,
                                              'attributeType':null,
                                              'attributePrecision':null,
@@ -76,7 +69,6 @@ class {{currentEntity.name|entityName}}
                                              'currentEntity': currentEntity,
                                              'targetEntity': targetEntity,
                                              'relationShipEntity': relationShipEntity|default(null) } %}
-
 {% set functionsTmp  %}
     {% include 'functions.php.twig' with {'attributeName':targetEntity.name|formatAttributeName,
                                          'attributeType':null,
@@ -84,18 +76,15 @@ class {{currentEntity.name|entityName}}
                                          'targetEntity': targetEntity,
                                          'attributeCardinality':relationshipCardinality} %}
 {% endset %}
-{% set functions = functions ~ functionsTmp %}
 
+{% set functions = functions ~ functionsTmp %}
 {% if relationshipCardinality == "oneToMany" or relationshipCardinality == "manyToMany" or relationshipCardinality == "ownerManyToMany" %}
 {% set contructorTmp  %}
         $this->{{targetEntity.name|formatAttributeName }}List = new ArrayCollection();
 {% endset %}
 {% set contructor = contructor ~ contructorTmp %}
 {% endif %}
-
-
 {% endfor %} {# relationship in entity.relationshipList #}
-
 {% if contructor != "" %}
     public function __construct()
     {
@@ -104,5 +93,4 @@ class {{currentEntity.name|entityName}}
 
 {% endif %}
 {{ functions|raw }}
-
 }

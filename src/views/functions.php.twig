@@ -27,8 +27,7 @@
 {% if attributeCardinality == "oneToMany" %}
 {% set targetAttributeName = currentEntity.name|entityName %}
 {% endif %}
-
-    /**
+/**
      * @param {{ targetEntityName }} ${{ attributeName }}
      * @return {{ currentEntity.name|entityName }}
      */
@@ -44,13 +43,6 @@
             }
 
         }
-{#
-        $this->{{ attributeName }}->set{{ targetAttributeName }}($this);
-
-        //If the object is already part of the collection, he is not added
-        if (!$this->{{ attributeName }}->contains(${{ targetEntity.name|formatAttributeName }})) {
-            $this->{{ attributeName }}->add(${{ targetEntity.name|formatAttributeName }});
-        } #}
     }
 
     /**
@@ -95,7 +87,7 @@
 {% endif %}
 {{ _self.getFunctionGet(attribute, attributeType, attributeName) }}
 {% if attributeType == "boolean" and needIsOrHasFunction(attributeName) %}
-    /**
+/**
      * @return {{ attributeType }} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
      */
     public function {{ attributeName }}()

@@ -51,8 +51,7 @@
 {% endfor %}
 {% for key in targetEntity.getPrimaryKeyList %}
      *  inverseJoinColumns={@ORM\JoinColumn(name="{{ targetEntity.name ~ '_' ~  targetEntity.getAttribute(key.id).name }}", referencedColumnName="{{ currentEntity.getAttribute(currentEntity.getPrimaryKeyList()[0].id).name }}")}{% if not loop.last %},{% endif %}
-{% endfor %}
-     
+{% endfor %}    
      * )
 {% elseif attributeCardinality == "manyToMany" %}
 {% set attributeName = targetEntity.name|formatAttributeName ~ "List"  %}
