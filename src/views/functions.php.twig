@@ -34,12 +34,23 @@
      */
     public function add{{ targetEntityName }}({{ targetEntityName }} ${{ targetEntity.name|formatAttributeName }})
     {
-        ${{ attributeName }}->set{{ targetAttributeName }}($this);
+        // if the object isn't in the list
+        if(!$this->{{ attributeName }}->contains(${{ targetEntity.name|formatAttributeName }})) {
+            
+            $this->{{ attributeName }}->add(${{ targetEntity.name|formatAttributeName }});
+
+            if(!${{ targetEntity.name|formatAttributeName }}->get{{currentEntity.name|entityName}}List()->contains($this)) {
+                ${{ targetEntity.name|formatAttributeName }}->add{{currentEntity.name|entityName}}($this);
+            }
+
+        }
+{#
+        $this->{{ attributeName }}->set{{ targetAttributeName }}($this);
 
         //If the object is already part of the collection, he is not added
         if (!$this->{{ attributeName }}->contains(${{ targetEntity.name|formatAttributeName }})) {
             $this->{{ attributeName }}->add(${{ targetEntity.name|formatAttributeName }});
-        }
+        } #}
     }
 
     /**

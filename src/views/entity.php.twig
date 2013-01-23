@@ -86,7 +86,7 @@ class {{currentEntity.name|entityName}}
 {% endset %}
 {% set functions = functions ~ functionsTmp %}
 
-{% if relationshipCardinality == "oneToMany" or relationshipCardinality == "manyToMany" %}
+{% if relationshipCardinality == "oneToMany" or relationshipCardinality == "manyToMany" or relationshipCardinality == "ownerManyToMany" %}
 {% set contructorTmp  %}
         $this->{{targetEntity.name|formatAttributeName }}List = new ArrayCollection();
 {% endset %}
