@@ -22,6 +22,7 @@ class MyTwigExtension extends \Twig_Extension
             'entityName' => new \Twig_Filter_Method($this, 'twig_entityname_filter'),
             'functionName' => new \Twig_Filter_Method($this, 'twig_functionName_filter'),
             'formatAttributeName' => new \Twig_Filter_Method($this, 'twig_attributeName_filter'),
+            'getReturnTypeOfAttribute' => new \Twig_Filter_Method($this, 'twig_getReturnTypeOfAttribute_filter'),
             'vardump' => new \Twig_Filter_Method($this, 'twig_vardump_filter',  array('is_safe' => array('html'))),
             'printr' => new \Twig_Filter_Method($this, 'twig_printr_filter',  array('is_safe' => array('html'))),
         );
@@ -35,6 +36,7 @@ class MyTwigExtension extends \Twig_Extension
         return array(
 //            'getJoinColumName' => new \Twig_Function_Method($this, 'getJoinColumName'),
             'needIsOrHasFunction' => new \Twig_Function_Method($this, 'needIsOrHasFunction'),
+            'getObjectForThisAttributeType' => new \Twig_Function_Method($this, 'getObjectForThisAttributeType'),
         );
     }
 
@@ -82,6 +84,43 @@ class MyTwigExtension extends \Twig_Extension
         }
 
         return $value;
+    }
+
+    /**
+     * Return the adapted value of an Doctrine type
+     * 
+     * @param string $value
+     * @return string
+     */
+    public function twig_getReturnTypeOfAttribute_filter($value)
+    {
+        switch (strtolower($value)) {
+            case "datetime": return "\DateTime";
+            case "datetimetz": return "\DateTime";
+            case "date": return "\DateTime";
+            case "time": return "\DateTime";
+            case "text": return "string";
+        }
+
+        return $value;
+    }
+
+    /**
+     * Return the adapted Object of an Doctrine type
+     *
+     * @param string $value
+     * @return string
+     */
+    public function getObjectForThisAttributeType($value)
+    {
+        switch (strtolower($value)) {
+            case "datetime": return "\DateTime";
+            case "datetimetz": return "\DateTime";
+            case "date": return "\DateTime";
+            case "time": return "\DateTime";
+        }
+
+        return null;
     }
 
     /**

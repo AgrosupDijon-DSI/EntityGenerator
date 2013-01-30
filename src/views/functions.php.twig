@@ -1,23 +1,31 @@
 {% macro getFunctionGet(attribute, attributeType, attributeName) %}
     /**
-     * @return {{ attributeType }} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
+     * @return {{ attributeType|getReturnTypeOfAttribute }} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
      */
     public function {{ attributeName|functionName('get') }}()
     {
         return $this->{{ attributeName }};
     }
 {% endmacro getFunctionGet %}
-{% macro getFunctionSet(currentEntity, attribute, attributeType, attributeName) %}
+{% macro getFunctionSet(currentEntity, attribute, attributeType, attributeName, attributeTypeForCast) %}
+{% if attributeTypeForCast == null %}
+{% set attributeTypeForCast = getObjectForThisAttributeType(attributeType) %}
+{% endif %}
 /**
-     * @param {{attributeType}} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
+     * @param {{attributeType|getReturnTypeOfAttribute}} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
      * @return {{currentEntity.name|entityName}}
      */
-    public function {{ attributeName|functionName('set') }}(${{ attributeName }})
+    public function {{ attributeName|functionName('set') }}({% if attributeTypeForCast %}{{ attributeTypeForCast }} {% endif %}${{ attributeName }})
     {
         $this->{{ attributeName }} = ${{ attributeName }};
         return $this;
     }
 {% endmacro getFunctionSet %}
+{% set attributeTypeForCast = null %}
+{% if attributeCardinality == "manyToOne" %}
+{% set attributeType = targetEntity.name|entityName %}
+{% set attributeTypeForCast = targetEntity.name|entityName %}
+{% endif %}
 {% if attributeCardinality == "manyToMany" or attributeCardinality == "ownerManyToMany" or attributeCardinality == "oneToMany" %}
 {% if attributeCardinality == "manyToMany" or attributeCardinality == "ownerManyToMany" %}
 {% set attributeName = attributeName ~ "List" %}
@@ -83,12 +91,12 @@
     }
     
 {% else %}
-{{ _self.getFunctionSet(currentEntity, attribute, attributeType, attributeName) }}
+{{ _self.getFunctionSet(currentEntity, attribute, attributeType, attributeName, attributeTypeForCast) }}
 {% endif %}
 {{ _self.getFunctionGet(attribute, attributeType, attributeName) }}
 {% if attributeType == "boolean" and needIsOrHasFunction(attributeName) %}
 /**
-     * @return {{ attributeType }} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
+     * @return {{ attributeType|getReturnTypeOfAttribute }} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
      */
     public function {{ attributeName }}()
     {
