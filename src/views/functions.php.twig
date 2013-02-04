@@ -32,9 +32,6 @@
 {% endif %}
 {% set targetEntityName = targetEntity.name|entityName %}
 {% set attributeType = "ArrayCollection(" ~ targetEntityName ~ ")" %}
-{% if attributeCardinality == "oneToMany" %}
-{% set targetAttributeName = currentEntity.name|entityName %}
-{% endif %}
 /**
      * @param {{ targetEntityName }} ${{ attributeName }}
      * @return {{ currentEntity.name|entityName }}
@@ -46,10 +43,13 @@
             
             $this->{{ attributeName }}->add(${{ targetEntity.name|formatAttributeName }});
 
-            if(!${{ targetEntity.name|formatAttributeName }}->get{{currentEntity.name|entityName}}List()->contains($this)) {
+{% if attributeCardinality != "oneToMany" %}
+            if (!${{ targetEntity.name|formatAttributeName }}->get{{currentEntity.name|entityName}}List()->contains($this)) {
                 ${{ targetEntity.name|formatAttributeName }}->add{{currentEntity.name|entityName}}($this);
             }
-
+{% else %}
+            ${{ targetEntity.name|formatAttributeName }}->{{currentEntity.name|functionName('set')}}($this);
+{% endif %}
         }
     }
 
@@ -61,7 +61,7 @@
     {
         if ($items instanceof ArrayCollection) {
             foreach ($items as $item) {
-                $this->{{ attributeName }}->add($item);
+                $this->{{ attributeName }}{% if attributeCardinality == "oneToMany" %}List{% endif %}->add($item);
             }
         } elseif ($items instanceof {{ targetEntityName }}) {
             $this->add{{ targetEntityName }}($items);
@@ -84,7 +84,7 @@
     {
         $this->{{ attributeName }} = ${{ targetEntity.name|formatAttributeName }};
 
-         if($this->{{ attributeName }}->{{ currentEntity.name|functionName('get') }}() !== $this) {
+         if ($this->{{ attributeName }}->{{ currentEntity.name|functionName('get') }}() !== $this) {
             $this->{{ attributeName }}->{{ currentEntity.name|functionName('set') }}($this);
         }
         return $this;
