@@ -39,9 +39,9 @@
     public function add{{ targetEntityName }}({{ targetEntityName }} ${{ targetEntity.name|formatAttributeName }})
     {
         // if the object isn't in the list
-        if(!$this->{{ attributeName }}->contains(${{ targetEntity.name|formatAttributeName }})) {
+        if(!$this->{{ attributeName }}{% if attributeCardinality == "oneToMany" %}List{% endif %}->contains(${{ targetEntity.name|formatAttributeName }})) {
             
-            $this->{{ attributeName }}->add(${{ targetEntity.name|formatAttributeName }});
+            $this->{{ attributeName }}{% if attributeCardinality == "oneToMany" %}List{% endif %}->add(${{ targetEntity.name|formatAttributeName }});
 
 {% if attributeCardinality != "oneToMany" %}
             if (!${{ targetEntity.name|formatAttributeName }}->get{{currentEntity.name|entityName}}List()->contains($this)) {
