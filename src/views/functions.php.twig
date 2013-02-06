@@ -31,7 +31,7 @@
 {% set attributeName = attributeName ~ "List" %}
 {% endif %}
 {% set targetEntityName = targetEntity.name|entityName %}
-{% set attributeType = "ArrayCollection(" ~ targetEntityName ~ ")" %}
+{% set attributeType = "ArrayCollection" %}
 /**
      * @param {{ targetEntityName }} ${{ attributeName }}
      * @return {{ currentEntity.name|entityName }}
