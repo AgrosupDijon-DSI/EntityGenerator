@@ -62,7 +62,12 @@ Change :
 
 TODO
 ----
-Lors de la génération d'une entité résultant d'une relation ManyToMany ayant des champs suplémentaires, des Clé primaires sont créé inutilement
+#. Si un élément peut être null, ajouter dans la fonction set la possibilité de passer une variable null
+```php
+public function setTruc($truc = null) {
+```
+
+#. Lors de la génération d'une entité résultant d'une relation ManyToMany ayant des champs suplémentaires, des Clé primaires sont créé inutilement
 ```php
 // USELESS, need to be removed
   /**
