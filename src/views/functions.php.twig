@@ -54,19 +54,19 @@
     }
 
     /**
-     * @param Mix (ArrayCollection/{{ targetEntityName }}) $items
+     * @param Mix (Collection/{{ targetEntityName }}) $items
      * @return {{ currentEntity.name|entityName }}
      */
     public function {{ attributeName|functionName('set') }}($items)
     {
-        if ($items instanceof ArrayCollection) {
+        if ($items instanceof Collection) {
             foreach ($items as $item) {
                 $this->{{ attributeName }}{% if attributeCardinality == "oneToMany" %}List{% endif %}->add($item);
             }
         } elseif ($items instanceof {{ targetEntityName }}) {
             $this->add{{ targetEntityName }}($items);
         } else {
-            throw new \Exception('$items must be an instance of {{ targetEntityName }} or ArrayCollection');
+            throw new \Exception('$items must be an instance of {{ targetEntityName }} or Collection');
         }
         return $this;
     }

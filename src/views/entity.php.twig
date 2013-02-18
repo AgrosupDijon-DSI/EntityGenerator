@@ -5,7 +5,10 @@
 {% set useDoctrineArrayCollection = "" %}
 {% for relationship in currentEntity.relationshipList %}
     {% if ((relationship.cardinality == "oneToMany") or (relationship.cardinality == "manyToMany") or (relationship.cardinality == "ownerManyToMany")) %}
-        {% set useDoctrineArrayCollection = "use Doctrine\\Common\\Collections\\ArrayCollection;" %}
+{% set useDoctrineArrayCollection %}
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+{% endset useDoctrineArrayCollection %}
     {% endif %}
 {% endfor %}
 
