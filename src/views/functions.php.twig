@@ -61,7 +61,9 @@
     {
         if ($items instanceof Collection) {
             foreach ($items as $item) {
-                $this->{{ attributeName }}{% if attributeCardinality == "oneToMany" %}List{% endif %}->add($item);
+                if(!$this->{{ attributeName }}->contains($item)) {
+                    $this->{{ attributeName }}{% if attributeCardinality == "oneToMany" %}List{% endif %}->add($item);
+                }
             }
         } elseif ($items instanceof {{ targetEntityName }}) {
             $this->add{{ targetEntityName }}($items);
