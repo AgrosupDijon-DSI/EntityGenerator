@@ -28,7 +28,7 @@ If your MPD has ManyToMany relations who own more than two relations, EntityGene
 Remember to check if the schema is correct with :
 `php app/console doctrine:schema:validate`
 
-[-> How it works in detail](src/doc/index.md)
+[-> How it works in detail](src/Cnerta/EntityGeneratorBundle/Resources/doc/index.md)
 
 What is ignored during transformation
 -------------------------------------
@@ -56,18 +56,20 @@ What next ?
 In the future we hope we can manage manyToMany relation who own more than two relations.
 
 
-Change : 
+Change :
 [2013-01-16] when a getter return an array, he is suffix with "List"
 [2012-05-22] chaining possibility on set methods
 
 TODO
 ----
-#. Si un élément peut être null, ajouter dans la fonction set la possibilité de passer une variable null
+
+- Si un élément peut être null, ajouter dans la fonction set la possibilité de passer une variable null
 ```php
 public function setTruc($truc = null) {
 ```
+- Lors de la génération d'une entité résultant d'une relation ManyToMany ayant des champs suplémentaires, des Clé primaires sont créé inutilement
 
-#. Lors de la génération d'une entité résultant d'une relation ManyToMany ayant des champs suplémentaires, des Clé primaires sont créé inutilement
+
 ```php
 // USELESS, need to be removed
   /**
