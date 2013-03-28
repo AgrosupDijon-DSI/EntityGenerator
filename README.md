@@ -40,7 +40,9 @@ What is ignored during transformation
 
 Install
 -------
-Just download the package and use it !
+- Clone from here
+- Install dependency with ```composer install``
+
 
 
 Commands lines
