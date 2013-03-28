@@ -1,15 +1,26 @@
 #!/usr/bin/env php
 <?php
-//Bootstrap our Silex application
-$app = require __DIR__ . '/src/bootstrap.php';
-
 //Include the namespaces of the components we plan to use
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use EduterCNERTA\Engine\PowerAmcMPDParserEnginev2 as PowerAmcMPDParserEngine;
-use EduterCNERTA\Engine\EntityGenerator;
+use Cnerta\EntityGeneratorBundle\Engine\PowerAmcMPDParserEnginev2 as PowerAmcMPDParserEngine;
+use Cnerta\EntityGeneratorBundle\Engine\EntityGenerator;
+use Cnerta\EntityGeneratorBundle\TwigExtentions\MyTwigExtension;
+
+
+//Bootstrap our Silex application
+require_once __DIR__.'/vendor/autoload.php';
+
+$app = new Silex\Application();
+
+$app->register(new Silex\Provider\TwigServiceProvider(), array(
+    'twig.path' => __DIR__.'/src/Cnerta/EntityGeneratorBundle/Resources/views',
+));
+
+$app['twig']->addExtension(new MyTwigExtension());
+
 
 //Instantiate our Console application
 $console = new Application('entity generator', '0.1');
@@ -21,7 +32,7 @@ $console->register('entity:generator')
         //Create a "--test" optional parameter
         new InputOption('file', 'Path of the PowerAmc MPD backup', InputOption::VALUE_REQUIRED, ''),
         new InputOption('namespace', 'NameSpace for the entities (use slash "/" instead of backslash "\\")', InputOption::VALUE_REQUIRED, ''),
-        new InputOption('output', 'Path for the output folder', InputOption::VALUE_REQUIRED, ''),
+        new InputOption('output', 'Path for the output folder', InputOption::VALUE_OPTIONAL, ''),
         new InputOption('createRepository', 'Create the Repository class', InputOption::VALUE_OPTIONAL, 'FALSE'),
     ))
     ->setDescription('Generate entities from Power AMC MPD xml backup file <info>v1.0</info>')

@@ -3,5 +3,12 @@
         "silex/silex": "1.0.*@dev",
         "symfony/console": "~2.1",
         "symfony/twig-bridge": "~2.1"
-    }
+    },
+
+    "autoload": {
+        "psr-0": {
+            "Cnerta": "src/"
+         }
+    },
+    "minimum-stability": "dev"
 }

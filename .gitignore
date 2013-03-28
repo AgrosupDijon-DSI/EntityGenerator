@@ -1,4 +1,6 @@
 .project
 /nbproject/
+/vendor/
 composer.lock
+.project
 

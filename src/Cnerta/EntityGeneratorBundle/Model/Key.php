@@ -1,6 +1,6 @@
 <?php
 
-namespace EntityGeneratorBundle\Cnerta\Model;
+namespace Cnerta\EntityGeneratorBundle\Model;
 
 /**
  * Key

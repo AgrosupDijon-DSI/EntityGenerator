@@ -1,9 +1,9 @@
 <?php
 
-namespace EduterEntityGeneratorBundle\Cnerta\TwigExtentions;
+namespace Cnerta\EntityGeneratorBundle\TwigExtentions;
 
-use EduterEntityGeneratorBundle\Cnerta\Model\Attribute;
-use EduterEntityGeneratorBundle\Cnerta\Model\Entity;
+use Cnerta\EntityGeneratorBundle\Model\Attribute;
+use Cnerta\EntityGeneratorBundle\Model\Entity;
 
 class MyTwigExtension extends \Twig_Extension
 {

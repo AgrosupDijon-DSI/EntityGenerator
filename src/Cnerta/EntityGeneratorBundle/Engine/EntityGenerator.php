@@ -1,8 +1,8 @@
 <?php
 
-namespace EntityGeneratorBundle\Cnerta\Engine;
+namespace Cnerta\EntityGeneratorBundle\Engine;
 
-use EntityGeneratorBundle\Cnerta\Model\EntityList;
+use Cnerta\EntityGeneratorBundle\Model\EntityList;
 
 /**
  * Description of EntityGenerator

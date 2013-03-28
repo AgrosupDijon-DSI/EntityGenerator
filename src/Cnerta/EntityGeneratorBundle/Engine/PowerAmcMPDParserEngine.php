@@ -1,9 +1,9 @@
 <?php
 
-namespace EntityGeneratorBundle\Cnerta\Engine;
+namespace Cnerta\EntityGeneratorBundle\Engine;
 
-use EntityGeneratorBundle\Cnerta\Model\Entity;
-use EntityGeneratorBundle\Cnerta\Model\Attribute;
+use Cnerta\EntityGeneratorBundle\Model\Entity;
+use Cnerta\EntityGeneratorBundle\Model\Attribute;
 
 /**
  * Parse the PowerAmc MDP XML for prepare entities to be generated
