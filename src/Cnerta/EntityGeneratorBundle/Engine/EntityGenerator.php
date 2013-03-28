@@ -1,8 +1,8 @@
 <?php
 
-namespace EduterCNERTA\Engine;
+namespace EntityGeneratorBundle\Cnerta\Engine;
 
-use EduterCNERTA\Model\EntityList;
+use EntityGeneratorBundle\Cnerta\Model\EntityList;
 
 /**
  * Description of EntityGenerator

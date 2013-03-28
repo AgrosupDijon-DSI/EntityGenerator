@@ -1,6 +1,6 @@
 <?php
 
-namespace EduterCNERTA\Model;
+namespace EntityGeneratorBundle\Cnerta\Model;
 
 /**
  * Entity
@@ -204,7 +204,7 @@ class Entity
 
     public function getJoinColumName($attributeIdTargetEntity)
     {
-        /** @var $key EduterCNERTA\Model\Key */
+        /** @var $key EntityGeneratorBundle\Cnerta\Model\Key */
         foreach ($this->getKeyList() as $key) {
             if ($key->getAttributeIdTarget() === $attributeIdTargetEntity) {
                 return $this->getAttribute($key->getId())->getName();

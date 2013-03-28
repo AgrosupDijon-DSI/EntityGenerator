@@ -1,6 +1,6 @@
 <?php
 
-namespace EduterCNERTA\Model;
+namespace EntityGeneratorBundle\Cnerta\Model;
 
 /**
  * Key

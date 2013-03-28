@@ -1,23 +1,22 @@
 <?php
 
-namespace EduterCNERTA\Engine;
+namespace EntityGeneratorBundle\Cnerta\Engine;
 
-use EduterCNERTA\Model\Entity;
-use EduterCNERTA\Model\Attribute;
-use EduterCNERTA\Model\EntityList;
-use EduterCNERTA\Model\Relationship;
-use EduterCNERTA\Model\Key;
+use EntityGeneratorBundle\Cnerta\Model\Entity;
+use EntityGeneratorBundle\Cnerta\Model\Attribute;
 
 /**
  * Parse the PowerAmc MDP XML for prepare entities to be generated
  *
  * @author Valerian Girard <valerian.girard@educagri.fr>
  */
-class PowerAmcMPDParserEnginev2
+class PowerAmcMPDParserEngine
 {
 
+    
     private $reservedKeyword = array("ACTION", "TIMESTAMP", "TIME", "TEXT", "NO", "ENUM", "DATE", "BIT", "ADD", "ALL", "ALTER", "ANALYZE", "AND", "AS", "ASC", "ASENSITIVE", "BEFORE", "BETWEEN", "BIGINT", "BINARY", "BLOB", "BOTH", "BY", "CALL", "CASCADE", "CASE", "CHANGE", "CHAR", "CHARACTER", "CHECK", "COLLATE", "COLUMN", "CONDITION", "CONSTRAINT", "CONTINUE", "CONVERT", "CREATE", "CROSS", "CURRENT_DATE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "CURRENT_USER", "CURSOR", "DATABASE", "DATABASES", "DAY_HOUR", "DAY_MICROSECOND", "DAY_MINUTE", "DAY_SECOND", "DEC", "DECIMAL", "DECLARE", "DEFAULT", "DELAYED", "DELETE", "DESC", "DESCRIBE", "DETERMINISTIC", "DISTINCT", "DISTINCTROW", "DIV", "DOUBLE", "DROP", "DUAL", "EACH", "ELSE", "ELSEIF", "ENCLOSED", "ESCAPED", "EXISTS", "EXIT", "EXPLAIN", "FALSE", "FETCH", "FLOAT", "FLOAT4", "FLOAT8", "FOR", "FORCE", "FOREIGN", "FROM", "FULLTEXT", "GRANT", "GROUP", "HAVING", "HIGH_PRIORITY", "HOUR_MICROSECOND", "HOUR_MINUTE", "HOUR_SECOND", "IF", "IGNORE", "IN", "INDEX", "INFILE", "INNER", "INOUT", "INSENSITIVE", "INSERT", "INT", "INT1", "INT2", "INT3", "INT4", "INT8", "INTEGER", "INTERVAL", "INTO", "IS", "ITERATE", "JOIN", "KEY", "KEYS", "KILL", "LEADING", "LEAVE", "LEFT", "LIKE", "LIMIT", "LINES", "LOAD", "LOCALTIME", "LOCALTIMESTAMP", "LOCK", "LONG", "LONGBLOB", "LONGTEXT", "LOOP", "LOW_PRIORITY", "MATCH", "MEDIUMBLOB", "MEDIUMINT", "MEDIUMTEXT", "MIDDLEINT", "MINUTE_MICROSECOND", "MINUTE_SECOND", "MOD", "MODIFIES", "NATURAL", "NOT", "NO_WRITE_TO_BINLOG", "NULL", "NUMERIC", "ON", "OPTIMIZE", "OPTION", "OPTIONALLY", "OR", "ORDER", "OUT", "OUTER", "OUTFILE", "PRECISION", "PRIMARY", "PROCEDURE", "PURGE", "READ", "READS", "REAL", "REFERENCES", "REGEXP", "RELEASE", "RENAME", "REPEAT", "REPLACE", "REQUIRE", "RESTRICT", "RETURN", "REVOKE", "RIGHT", "RLIKE", "SCHEMA", "SCHEMAS", "SECOND_MICROSECOND", "SELECT", "SENSITIVE", "SEPARATOR", "SET", "SHOW", "SMALLINT", "SONAME", "SPATIAL", "SPECIFIC", "SQL", "SQLEXCEPTION", "SQLSTATE", "SQLWARNING", "SQL_BIG_RESULT", "SQL_CALC_FOUND_ROWS", "SQL_SMALL_RESULT", "SSL", "STARTING", "STRAIGHT_JOIN", "TABLE", "TERMINATED", "THEN", "TINYBLOB", "TINYINT", "TINYTEXT", "TO", "TRAILING", "TRIGGER", "TRUE", "UNDO", "UNION", "UNIQUE", "UNLOCK", "UNSIGNED", "UPDATE", "USAGE", "USE", "USING", "UTC_DATE", "UTC_TIME", "UTC_TIMESTAMP", "VALUES", "VARBINARY", "VARCHAR", "VARCHARACTER", "VARYING", "WHEN", "WHERE", "WHILE", "WITH", "WRITE", "XOR", "YEAR_MONTH", "ZEROFILL");
 
+    
     /**
      * @var array engine configuration
      */
@@ -26,6 +25,11 @@ class PowerAmcMPDParserEnginev2
             "1..*" => "oneToMany",
             "0..1" => "oneToOne",
             "1..1" => "oneToOne"),
+        "cardinalityReciproque" => array(
+            "0..*" => "manyToOne",
+            "1..*" => "manyToOne",
+            "0..1" => "null",
+            "1..1" => "null"),
         "type" => array(
             "char" => "string",
             "varchar" => "string",
@@ -56,168 +60,251 @@ class PowerAmcMPDParserEnginev2
             "double precision" => "decimal",
             "fixed" => "decimal",
             "double" => "float"
-            ));
+        ));
 
     /**
      * @var DOMDocument
      */
     private $domDoc;
-    private $xPath;
 
     function __construct($PAXmlPath)
     {
         $this->domDoc = new \DOMDocument();
         $this->domDoc->load($PAXmlPath);
-        $this->xPath = new \DOMXPath($this->domDoc);
     }
 
     public function parseEntity()
     {
         $infomationMessages = "";
-        $entityList = new EntityList();
+        $aEntities = array();
+        $aEntitiesTernary = array();
+        $aEntitiesTernaryMake = array();
 
-        // Parsing table for an entity transformation
-        $tables = $this->xPath->query("//c:Tables/*");
+        $xPath = new \DOMXPath($this->domDoc);
+
+
+        $tables = $xPath->query("//c:Tables/*");
         foreach ($tables as $table) {
+            $isTernary = FALSE;
             $entity = new Entity();
 
-            $entity->setId($table->getAttribute("Id"));
+            $entity->setID($table->getAttribute("Id"));
             $entity->setName($this->getNodeValue($table->getElementsByTagName("Code")->item(0)));
             $entity->setComment($this->getNodeValue($table->getElementsByTagName("Comment")->item(0)));
 
             // Search Primary Key attributes
-            $keyRef = $this->xPath->query("//c:Tables/o:Table[@Id='" . $entity->getId() . "']/c:PrimaryKey/o:Key");
-            if ($keyRef->length <= 0) {
+
+            $keyRef = $xPath->query("//c:Tables/o:Table[@Id='" . $entity->getID() . "']/c:PrimaryKey/o:Key");
+            if($keyRef->length <= 0) {
                 return array("errorMessages" => "Table '" . $entity->getName() . "' has not Primary Key !");
-                exit;
+                exit;                    
             }
             $keyRef = $keyRef->item(0)->getAttribute("Ref");
+     
 
             // Get Primary Key ID
-            $primaryKeysEls = $this->xPath->query("//c:Tables/o:Table[@Id='" . $entity->getId() . "']/c:Keys/o:Key[@Id='" . $keyRef . "']/c:Key.Columns/*");
-                
+            $primaryKeysEls = $xPath->query("//c:Tables/o:Table[@Id='" . $entity->getID() . "']/c:Keys/o:Key[@Id='" . $keyRef . "']/c:Key.Columns/*");
+
+            $primaryKeys = array();
+
             foreach ($primaryKeysEls as $primaryKeysEl) {
-                $entity->addKey(new Key($primaryKeysEl->getAttribute("Ref"), true, false));
+                $primaryKeys[] = $primaryKeysEl->getAttribute("Ref");
             }
 
-            // Array of id of primary key(s) and foreign key(s)
-            foreach($this->getForeignKeyList($entity->getId()) as $key) {
-                $entity->addKey(new Key($key["id"], false, true, $key['enityIdTarget'], $key['attributeIdTarget']));
+            if(count($primaryKeys) > 1) {
+                $entity->setHasCompositPrimaryKey(TRUE);
+            }
+            
+            $entity->setIsTernary(FALSE);
+            if (count($primaryKeys) >= 2) {
+                if ($this->isTernary($entity->getID())) {
+                    $isTernary = $this->hasAttributeNonKey($entity->getID());
+                    if ($isTernary) {
+                        $aEntitiesTernary[] = $entity->getID();
+                        $entity->setIsTernary(TRUE);
+                    }
+                }
             }
 
             // Parse columns
             foreach ($table->getElementsByTagName("Column") as $column) {
-
                 if ($column instanceof \DOMElement) {
-
                     if ($column->getAttribute("Id") != NULL) {
                         $attribute = new Attribute();
 
-                        $attribute->setId($column->getAttribute("Id"));
+                        $attribute->setID($column->getAttribute("Id"));
 
-                        // Check if attribute name isn't a reseved keyword of MySqsl
                         $attName = $this->getNodeValue($column->getElementsByTagName("Code")->item(0));
-                        if (!in_array($attName, $this->reservedKeyword)) {
+                        if(!in_array($attName, $this->reservedKeyword)) {
                             $attribute->setName($attName);
                         } else {
                             return array("errorMessages" => "Attribute name '" . $attName . "' of the table '" . $entity->getName() . "' use a MySql reserved keyword !");
                         }
 
-
+                        //TODO traiter #UNIQUE#
                         $attribute->setComment($this->getNodeValue($column->getElementsByTagName("Comment")->item(0)));
-
+                        
                         try {
                             $attribute->setType($this->geTypeForDoctrine($this->getNodeValue($column->getElementsByTagName("DataType")->item(0))));
-
                             if ($attribute->getType() === NULL) {
                                 throw new \Exception("Type not defined in Table :" . $entity->getName() . " for column : " . $attribute->getName(), 500);
                             }
-
                             $attribute->setLength($this->getNodeValue($column->getElementsByTagName("Length")->item(0)));
-
                             $attribute->setPrecision($this->getNodeValue($column->getElementsByTagName("Precision")->item(0)));
+
 
                             $attribute->setIsIdentifier($this->getNodeValue($column->getElementsByTagName("Identity")->item(0)));
 
                             if ($this->getNodeValue($column->getElementsByTagName("Code")->item(0)) == 1) {
-                                $attribute->setIsNullAble(false);
+                                $attribute->setIsNullAble(FALSE);
                             } else {
-                                $attribute->setIsNullAble(true);
+                                $attribute->setIsNullAble(TRUE);
                             }
 
-                            
-
-                            if ($entity->getKey($attribute->getId()) != null) {
-                                if($entity->getKey($attribute->getId())->isPrimary()) {
-
-                                    $attribute->setIsPrimary(true);
-                                    $attribute->setIsUnique(true);
-                                    $attribute->setIsNullAble(false);
-                                    
-                                } elseif($entity->getKey($attribute->getId())->isForeign()) {
-
-                                    $attribute->setForeignKey($entity->getKey($attribute->getId())->getEntityIdTarget());
-                                    $attribute->setIsPrimary(false);
-                                    $attribute->setIsUnique(false);
-                                    
-                                }
+                            if (in_array($attribute->getID(), $primaryKeys)) {
+                                $attribute->setIsPrimary(TRUE);
+                                $attribute->setIsUnique(TRUE);
                             } else {
-                                $attribute->setIsPrimary(false);
-                                $attribute->setIsUnique(false);
+                                $attribute->setIsPrimary(FALSE);
+                                $attribute->setIsUnique(FALSE);
                             }
 
                             $entity->addAttribute($attribute);
-
-                        } catch (\Exception $e) {
+                        } catch(\Exception $e) {
                             echo "\n\n";
                             print_r($e->getMessage());
                             echo "\n";
                         }
-
                     }
-
                 }
             }
 
-            $entityList->addEnity($entity);
-        } // END of parsing Table
-
+            $aEntities[$entity->getID()] = $entity;
+        }
 
         // Parse References
-        $references = $this->xPath->query("//c:References/*");
+        $references = $xPath->query("//c:References/*");
 
         foreach ($references as $reference) {
 
-            $relationship = new Relationship();
+            $IDReference = $reference->getAttribute("Id");
+            $parentTable = $reference->getElementsByTagName("ParentTable")->item(0)->getElementsByTagName("Table")->item(0)->getAttribute("Ref");
+            $childTable = $reference->getElementsByTagName("ChildTable")->item(0)->getElementsByTagName("Table")->item(0)->getAttribute("Ref");
 
-            $relationship->setId($reference->getAttribute("Id"));
+            $cardinality = $this->getNodeValue($reference->getElementsByTagName("Cardinality")->item(0));
 
-            $relationship->setName($this->getNodeValue($reference->getElementsByTagName("Code")->item(0)));
+            $referenceJoin = $xPath->query("//c:References/o:Reference[@Id='" . $IDReference . "']/c:Joins/o:ReferenceJoin")->item(0);
 
-//            $parentTable = $reference->getElementsByTagName("ParentTable")->item(0)->getElementsByTagName("Table")->item(0)->getAttribute("Ref");
-            $relationship->setEntityOwner($reference->getElementsByTagName("ParentTable")->item(0)->getElementsByTagName("Table")->item(0)->getAttribute("Ref"));
-//            $childTable = $reference->getElementsByTagName("ChildTable")->item(0)->getElementsByTagName("Table")->item(0)->getAttribute("Ref");
-            $relationship->setEntityInRelationship($reference->getElementsByTagName("ChildTable")->item(0)->getElementsByTagName("Table")->item(0)->getAttribute("Ref"));
+            $Obj1 = $referenceJoin->getElementsByTagName("Object1")->item(0)->getElementsByTagName("Column")->item(0)->getAttribute("Ref");
+            $Obj2 = $referenceJoin->getElementsByTagName("Object2")->item(0)->getElementsByTagName("Column")->item(0)->getAttribute("Ref");
 
-            $relationship->setCardinality($this->conf["cardinality"][$this->getNodeValue($reference->getElementsByTagName("Cardinality")->item(0))]);
+            // If the relation is not ternary
+            if ($aEntities[$parentTable]->isTernary() === FALSE && $aEntities[$childTable]->isTernary() === FALSE) {
 
-            $relationshipNonOwner = clone $relationship;
-            if($relationshipNonOwner->getCardinality() == "oneToMany") {
-                $relationshipNonOwner->setCardinality("manyToOne");
+                if ($aEntities[$parentTable]->getAttribute($Obj1)->getIsPrimary() == TRUE) {
+                    // Set a reference ton the chind in the parent entity
+                    $aEntities[$parentTable]->addAttribute($this->duplicate($aEntities[$parentTable]->getAttribute($Obj1), $aEntities[$childTable], $Obj2, $this->conf["cardinality"][$cardinality], $aEntities[$parentTable]));
+                } else {
+                    $aEntities[$parentTable]->getAttribute($Obj1)->setCardinality($this->conf["cardinality"][$cardinality]);
+                    $aEntities[$parentTable]->getAttribute($Obj1)->setRelationEntity($aEntities[$childTable]);
+                    $aEntities[$parentTable]->getAttribute($Obj1)->setRelationAttribute($Obj2);
+                }
+                $aEntities[$parentTable]->setIsOwner(TRUE);
+
+
+                if ($aEntities[$childTable]->getAttribute($Obj2)->getIsPrimary() == TRUE) {
+                    $aEntities[$childTable]->addAttribute($this->duplicate($aEntities[$childTable]->getAttribute($Obj2), $aEntities[$parentTable], $Obj1, $this->conf["cardinalityReciproque"][$cardinality], $aEntities[$childTable]));
+                } else {
+                    $aEntities[$childTable]->getAttribute($Obj2)->setCardinality($this->conf["cardinalityReciproque"][$cardinality]);
+                    $aEntities[$childTable]->getAttribute($Obj2)->setRelationEntity($aEntities[$parentTable]);
+                    $aEntities[$childTable]->getAttribute($Obj2)->setRelationAttribute($Obj1);
+                }
+                $aEntities[$childTable]->setIsOwner(FALSE);
+
+            } else {
+                if (!in_array($parentTable, $aEntitiesTernaryMake) && !in_array($childTable, $aEntitiesTernaryMake)) {
+                    $aEntitiesTernaryMake[] = $parentTable;
+                    $aEntitiesTernaryMake[] = $childTable;
+
+                    $tagNameOfSide = NULL;
+                    $tagNameOfColumn = NULL;
+
+                    $ternaryEntities = array();
+
+
+                    if ($aEntities[$parentTable]->isTernary() === TRUE) {
+
+                        $tagNameOfColumn = "Object2";
+                        $tagNameOfSide = "ChildTable";
+                        $otherSides = $xPath->query("//c:References/o:Reference/c:ParentTable/o:Table[@Ref='" . $aEntities[$parentTable]->getID() . "']");
+                    } elseif ($aEntities[$childTable]->isTernary() === TRUE) {
+
+                        $tagNameOfColumn = "Object1";
+                        $tagNameOfSide = "ParentTable";
+
+                        $otherSides = $xPath->query("//c:References/o:Reference/c:ChildTable/o:Table[@Ref='" . $aEntities[$childTable]->getID() . "']");
+                    }
+
+                    foreach ($otherSides as $otherSide) {
+                        $domEL = $otherSide->parentNode->parentNode;
+
+                        //count the number of foreignkey for determinate who is the owner in a manyToMany relation
+                        $nbFK = $this->countForeignKey($domEL->getElementsByTagName($tagNameOfSide)->item(0)->getElementsByTagName("Table")->item(0)->getAttribute("Ref"));
+
+                        do {
+                            if (isset($ternaryEntities[$nbFK])) {
+                                $nbFK++;
+                            }
+                        } while (isset($ternaryEntities[$nbFK]));
+
+
+                        $ternaryEntities[$nbFK] = array(
+                            "ID" => $domEL->getElementsByTagName($tagNameOfSide)->item(0)->getElementsByTagName("Table")->item(0)->getAttribute("Ref"),
+                            "Column" => $domEL->getElementsByTagName($tagNameOfColumn)->item(0)->getElementsByTagName("Column")->item(0)->getAttribute("Ref"),
+                            "nbFK" => $nbFK,
+                            "cardinality" => $this->getNodeValue($domEL->getElementsByTagName("Cardinality")->item(0))
+                        );
+                    }
+
+                    if (count($ternaryEntities) > 2) {
+                        $infomationMessages = "the relationship ManyToMany \"" . $this->getNodeValue($reference->getElementsByTagName("Code")->item(0)) . "\" was not created because it connects more than two entities.\n";
+                    } else {
+
+                        krsort($ternaryEntities);
+
+                        $isFirst = TRUE;
+                        foreach ($ternaryEntities as $ternaryEntity) {
+
+                            foreach ($ternaryEntities as $ternaryEntity2) {
+                                if ($ternaryEntity["ID"] != $ternaryEntity2["ID"]) {
+
+                                    if ($ternaryEntity2["cardinality"] == "0..*" || $ternaryEntity2["cardinality"] == "1..*") {
+                                        $cardinality = "manyToMany";
+                                        if ($isFirst) {
+                                            $isFirst = FALSE;
+                                            $cardinality = "ownerManyToMany";
+                                        }
+                                    } else {
+                                        $cardinality = $this->conf["cardinality"][$ternaryEntity2["cardinality"]];
+                                    }
+
+                                    $att2 = $this->duplicate($aEntities[$ternaryEntity2["ID"]]->getAttribute($ternaryEntity2["Column"]), $aEntities[$ternaryEntity2["ID"]], $ternaryEntity2["Column"], $cardinality, $aEntities[$ternaryEntity2["ID"]]);
+                                    $att2->setName($aEntities[$ternaryEntity2["ID"]]->getName() . "s");
+                                    $att2->setRelationName($this->getNodeValue($reference->getElementsByTagName("Code")->item(0)));
+                                    $aEntities[$ternaryEntity["ID"]]->addAttribute($att2);
+                                }
+                            }
+                        }
+                    }
+                }
             }
-
-            if($relationship->getCardinality() == "oneToOne") {
-                $relationship->setCardinality("ownerOneToOne");
-            }
-
-            // Add the relationShip to his Owner
-            $entityList->getEntityById($relationship->getEntityOwner())->addRelationship($relationship);
-            // Add the relationShip to the non Owner
-            $entityList->getEntityById($relationship->getEntityInRelationship())->addRelationship($relationshipNonOwner);
-
         }
 
-        return array("entities" => $entityList, "infomationMessages" => $infomationMessages);
+        foreach ($aEntitiesTernary as $oneEntity) {
+            unset($aEntities[$oneEntity]);
+        }
+
+        return array("entities" => $aEntities, "infomationMessages" => $infomationMessages);
     }
 
     /**
@@ -266,19 +353,19 @@ class PowerAmcMPDParserEnginev2
      */
     protected function duplicate(Attribute $attributeToDuplicate, $relationEntity, $relationAttribute, $cardinality, $entityParent)
     {
-
+        
         $attributeFK = new Attribute();
-        $attributeFK->setID($attributeToDuplicate->getId() . count($entityParent->getAttributes()));
+        $attributeFK->setID($attributeToDuplicate->getID() . count($entityParent->getAttributes()));
         $attributeFK->setName($attributeToDuplicate->getName());
         $attributeFK->setComment($attributeToDuplicate->getComment());
         $attributeFK->setType($attributeToDuplicate->getType());
         $attributeFK->setLength($attributeToDuplicate->getLength());
         $attributeFK->setPrecision($attributeToDuplicate->getPrecision());
         $attributeFK->setDefaultValue($attributeToDuplicate->getDefaultValue());
-        $attributeFK->setIsIdentifier(false);
-        $attributeFK->setIsNullAble(true);
-        $attributeFK->setIsPrimary(false);
-        $attributeFK->setIsUnique(false);
+        $attributeFK->setIsIdentifier(FALSE);
+        $attributeFK->setIsNullAble(TRUE);
+        $attributeFK->setIsPrimary(FALSE);
+        $attributeFK->setIsUnique(FALSE);
 
         $attributeFK->setCardinality($cardinality);
         $attributeFK->setRelationEntity($relationEntity);
@@ -301,8 +388,9 @@ class PowerAmcMPDParserEnginev2
     {
         $aAttributPK = array();
         $aAttributFK = array();
+        $xPath = new \DOMXPath($this->domDoc);
 
-        $indexes = $this->xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index");
+        $indexes = $xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index");
 
         foreach ($indexes as $index) {
             $indexID = $index->getAttribute("Id");
@@ -311,12 +399,12 @@ class PowerAmcMPDParserEnginev2
 
             if ($type == "PK") {
 
-                $attributesIDs = $this->xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index[@Id='" . $indexID . "']/c:IndexColumns/o:IndexColumn/c:Column/o:Column");
+                $attributesIDs = $xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index[@Id='" . $indexID . "']/c:IndexColumns/o:IndexColumn/c:Column/o:Column");
                 foreach ($attributesIDs as $attributeID) {
                     $aAttributPK[] = $attributeID->getAttribute("Ref");
                 }
             } elseif ($type == "FK") {
-                $attributesIDs = $this->xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index[@Id='" . $indexID . "']/c:IndexColumns/o:IndexColumn/c:Column/o:Column");
+                $attributesIDs = $xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index[@Id='" . $indexID . "']/c:IndexColumns/o:IndexColumn/c:Column/o:Column");
                 foreach ($attributesIDs as $attributeID) {
                     $aAttributFK[] = $attributeID->getAttribute("Ref");
                 }
@@ -324,16 +412,16 @@ class PowerAmcMPDParserEnginev2
         }
 
         if (count($aAttributPK) !== count($aAttributFK)) {
-            return false;
+            return FALSE;
         }
 
         foreach ($aAttributPK as $att) {
             if (!in_array($att, $aAttributFK)) {
-                return false;
+                return FALSE;
             }
         }
 
-        return true;
+        return TRUE;
     }
 
     /**
@@ -346,28 +434,29 @@ class PowerAmcMPDParserEnginev2
     {
         $aIDColumn = array();
         $aIDKey = array();
+        $xPath = new \DOMXPath($this->domDoc);
 
-        $columns = $this->xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Columns/o:Column");
+        $columns = $xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Columns/o:Column");
         foreach ($columns as $column) {
             $aIDColumn[] = $column->getAttribute("Id");
         }
 
-        $keys = $this->xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Keys/o:Key/c:Key.Columns/o:Column");
+        $keys = $xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Keys/o:Key/c:Key.Columns/o:Column");
         foreach ($keys as $key) {
             $aIDKey[] = $key->getAttribute("Ref");
         }
 
         if (count($aIDKey) !== count($aIDColumn)) {
-            return false;
+            return FALSE;
         }
 
         foreach ($aIDColumn as $att) {
             if (!in_array($att, $aIDKey)) {
-                return false;
+                return FALSE;
             }
         }
 
-        return true;
+        return TRUE;
     }
 
     /**
@@ -379,8 +468,9 @@ class PowerAmcMPDParserEnginev2
     protected function countForeignKey($idTable)
     {
         $nbFK = 0;
+        $xPath = new \DOMXPath($this->domDoc);
 
-        $indexes = $this->xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index");
+        $indexes = $xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index");
 
         foreach ($indexes as $index) {
             $code = $this->getNodeValue($index->getElementsByTagName("Code")->item(0));
@@ -391,73 +481,6 @@ class PowerAmcMPDParserEnginev2
         }
 
         return $nbFK;
-    }
-
-    /**
-     * Return an array of id attributes who are ForeingKey
-     * @param string $idTable
-     * @return array()
-     */
-    protected function getForeignKeyList($idTable)
-    {
-        $keys = array();
-        $indexes = $this->xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index");
-
-        foreach ($indexes as $index) {
-            $indexID = $index->getAttribute("Id");
-            $reference = $index->getElementsByTagName("LinkedObject")
-                    ->item(0)
-                    ->getElementsByTagName("Reference")
-                    ->item(0);
-
-            $code = $this->getNodeValue($index->getElementsByTagName("Code")->item(0));
-            $type = strtolower(substr($code, (strlen($code) - 2), strlen($code)));
-
-            if ($type == "fk") {
-                
-                $attributesIDs = $this->xPath->query("//c:Tables/o:Table[@Id='" . $idTable . "']/c:Indexes/o:Index[@Id='" . $indexID . "']/c:IndexColumns/o:IndexColumn/c:Column/o:Column");
-
-                foreach ($attributesIDs as $attributeID) {
-
-                    $entityIdTarget = null;
-                    $attributeIdTarget = null;
-
-                    if($reference != null) {
-                        $reference = $reference->getAttribute("Ref");
-
-                        // Check if we dont fond the id of attribute in the ParentTable
-                        $parentTable = $this->xPath->query('//c:References/o:Reference[@Id="' . $reference . '"]/c:ParentTable/o:Table')->item(0)->getAttribute("Ref");
-                        
-                        if($this->isColumnbelongsThisTable($attributeID->getAttribute("Ref"), $parentTable) === false) {
-                            
-                            $entityIdTarget = $parentTable;
-                            $attributeIdTarget = $this->xPath->query('//c:References/o:Reference[@Id="' . $reference . '"]/c:Joins/o:ReferenceJoin/c:Object1/o:Column')->item(0)->getAttribute("Ref");
-
-                        } else {
-                            // Check if we dont fond the id of attribute in the ChildTable
-                            $childTable = $this->xPath->query('//c:References/o:Reference[@Id="' . $reference . '"]/c:ChildTable/o:Table')->item(0)->getAttribute("Ref");
-
-                            if($this->isColumnbelongsThisTable($attributeID->getAttribute("Ref"), $childTable) === false) {
-                                $entityIdTarget = $childTable;
-                                $attributeIdTarget = $this->xPath->query('//c:References/o:Reference[@Id="' . $reference . '"]/c:Joins/o:ReferenceJoin/c:Object2/o:Column')->item(0)->getAttribute("Ref");
-                            }
-                        }
-
-                        $keys[] = array("id" => $attributeID->getAttribute("Ref"), "enityIdTarget" => $entityIdTarget, "attributeIdTarget" => $attributeIdTarget);
-                    }
-
-                } // end foreach $attributesIDs
-                
-            } // end if "fk"
-        } // end foreach $indexes
-
-        return $keys;
-    }
-
-
-
-    private function isColumnbelongsThisTable($idColumn, $idTable) {
-        return $this->xPath->query('//c:Tables/o:Table[@Id="' . $idTable . '"]/c:Columns/o:Column[@Id="' . $idColumn . '"]')->item(0) !== null;
     }
 
 }
