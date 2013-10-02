@@ -67,6 +67,11 @@ class Attribute
     private $precision;
 
     /**
+     * @var int The scale for a decimal (exact numeric) column. (Applies only if a decimal column is used.)
+     */
+    private $scale;
+
+    /**
      * @var string id of the Entity targeted
      */
     private $foreignKey;
@@ -201,5 +206,14 @@ class Attribute
         return $this->foreignKey !== null;
     }
 
+    public function getScale()
+    {
+        return $this->scale;
+    }
+
+    public function setScale($scale)
+    {
+        $this->scale = $scale;
+    }
 }
 
