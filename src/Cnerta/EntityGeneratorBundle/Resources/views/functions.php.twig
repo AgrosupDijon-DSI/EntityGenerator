@@ -15,7 +15,7 @@
      * @param {{attributeType|getReturnTypeOfAttribute}} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
      * @return {{currentEntity.name|entityName}}
      */
-    public function {{ attributeName|functionName('set') }}({% if attributeTypeForCast %}{{ attributeTypeForCast }} {% endif %}${{ attributeName }})
+    public function {{ attributeName|functionName('set') }}({% if attributeTypeForCast %}{{ attributeTypeForCast }} {% endif %}${{ attributeName }}{% if attribute.isNullAble %} = null{% endif %})
     {
         $this->{{ attributeName }} = ${{ attributeName }};
         return $this;
