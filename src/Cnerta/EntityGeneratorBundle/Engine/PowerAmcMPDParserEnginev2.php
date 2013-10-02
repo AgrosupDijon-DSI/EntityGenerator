@@ -117,7 +117,7 @@ class PowerAmcMPDParserEnginev2
 
                         // Check if attribute name isn't a reseved keyword of MySqsl
                         $attName = $this->getNodeValue($column->getElementsByTagName("Code")->item(0));
-                        if (!in_array($attName, $this->reservedKeyword)) {
+                        if (!in_array( strtoupper($attName), $this->reservedKeyword)) {
                             $attribute->setName($attName);
                         } else {
                             return array("errorMessages" => "Attribute name '" . $attName . "' of the table '" . $entity->getName() . "' use a MySql reserved keyword !");
@@ -186,6 +186,7 @@ class PowerAmcMPDParserEnginev2
                     }
 
                 }
+
             }
 
             $entityList->addEnity($entity);

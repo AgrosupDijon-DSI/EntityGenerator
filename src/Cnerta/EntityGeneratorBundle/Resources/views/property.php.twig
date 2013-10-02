@@ -21,7 +21,7 @@
 {% endif %}
      * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}{{attributeDecimale}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%}, unique={% if not currentEntity.hasCompositPrimaryKey %}true{%else%}false{%endif%})
 {% else %}
-{% if currentEntity.hasPrimaryKey == false or currentEntity.isThisEntityATernaryRelationshipBetweenManyEntity() %}
+{% if (currentEntity.hasPrimaryKey == false or currentEntity.isThisEntityATernaryRelationshipBetweenManyEntity) and attribute == null %}
      * @ORM\Id
 {% endif %}
 {% if attributeCardinality == "oneToOne" %}

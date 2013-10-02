@@ -26,21 +26,37 @@ class {{currentEntity.name|entityName}}
 {
 {% endspaceless %}
 {% if currentEntity.isThisEntityATernaryRelationshipBetweenManyEntity() == false %}
-{% for attribute in currentEntity.attributeList %}
-{% if attribute.isForeignKey == false %}
-    {% include 'property.php.twig' with {'attributeName':attribute.name|formatAttributeName,
-                                         'attributeType':attribute.type,
-                                         'attributePrecision':attribute.precision,
-                                         'attributeLength':attribute.length,
-                                         'attributeCardinality':null} %}
-{% set functionsTmp  %}
-    {% include 'functions.php.twig' with {'attributeName':attribute.name|formatAttributeName,
-                                         'attributeType':attribute.type,
-                                         'attributeCardinality':null} %}
-{% endset %}
-{% set functions = functions ~ functionsTmp %}
-{% endif %} {# attribute.isForeignKey == false #}
-{% endfor %} {# attribute #}
+    {% for attribute in currentEntity.attributeList %}
+        {% if attribute.isForeignKey == false %}
+            {% include 'property.php.twig' with {'attributeName':attribute.name|formatAttributeName,
+                                                 'attributeType':attribute.type,
+                                                 'attributePrecision':attribute.precision,
+                                                 'attributeLength':attribute.length,
+                                                 'attributeCardinality':null} %}
+            {% set functionsTmp  %}
+            {% include 'functions.php.twig' with {'attributeName':attribute.name|formatAttributeName,
+                                                 'attributeType':attribute.type,
+                                                 'attributeCardinality':null} %}
+            {% endset %}
+            {% set functions = functions ~ functionsTmp %}
+        {% endif %} 
+    {% endfor %} 
+{% else %}
+    {% for attribute in currentEntity.attributeList %}
+        {% if attribute.isForeignKey == false and attribute.isPrimary == false %}
+            {% include 'property.php.twig' with {'attributeName':attribute.name|formatAttributeName,
+                                                 'attributeType':attribute.type,
+                                                 'attributePrecision':attribute.precision,
+                                                 'attributeLength':attribute.length,
+                                                 'attributeCardinality':null} %}
+            {% set functionsTmp  %}
+            {% include 'functions.php.twig' with {'attributeName':attribute.name|formatAttributeName,
+                                                 'attributeType':attribute.type,
+                                                 'attributeCardinality':null} %}
+            {% endset %}
+            {% set functions = functions ~ functionsTmp %}
+        {% endif %}
+    {% endfor %}
 {% endif %}
 {% for relationship in currentEntity.relationshipList %}
 {% spaceless %}
