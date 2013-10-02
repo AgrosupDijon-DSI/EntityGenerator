@@ -1,9 +1,14 @@
 {% if attribute.precision %} {# if the attribute has a precision/scale, the real type of the attribute is decimal #}
     {% set attributeType = "decimal" %}
+    {% set attributeDecimale = ", precision=" ~ attribute.precision %}
+    {% if attribute.scale %}
+        {% set attributeDecimale =  attributeDecimale ~ ", scale=" ~ attribute.scale %}
+    {% endif %}
 {% endif %}
 {% if attributeLength %}
 {% set attributeLength = ", length=" ~ attributeLength %}
 {% endif %}
+
 
     /**
 {%if attribute.isPrimary %}
@@ -14,7 +19,7 @@
 {% else %}
 {% set attributeName = attribute.name|formatAttributeName() %}
 {% endif %}
-     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%}, unique={% if not currentEntity.hasCompositPrimaryKey %}true{%else%}false{%endif%})
+     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}{{attributeDecimale}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%}, unique={% if not currentEntity.hasCompositPrimaryKey %}true{%else%}false{%endif%})
 {% else %}
 {% if currentEntity.hasPrimaryKey == false or currentEntity.isThisEntityATernaryRelationshipBetweenManyEntity() %}
      * @ORM\Id
@@ -29,7 +34,7 @@
 {% set attributeType = targetEntity.name|entityName %}
      * @ORM\OneToOne(targetEntity="{{ targetEntity.name|entityName }}", mappedBy="{{ currentEntity.name|formatAttributeName }}")
 {% elseif attributeCardinality == "null" %}
-     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%})
+     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}{{attributeDecimale}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%})
 {% elseif attributeCardinality == "manyToOne" %}
 {% set attributeType = targetEntity.name|entityName %}
      * @ORM\ManyToOne(targetEntity="{{ attributeType }}", inversedBy="{{ currentEntity.name|formatAttributeName }}List", cascade={"persist", "merge"})
@@ -57,7 +62,7 @@
 {% set attributeName = targetEntity.name|formatAttributeName ~ "List"  %}
      * @ORM\ManyToMany(targetEntity="{{targetEntity.name|entityName}}", mappedBy="{{currentEntity.name|formatAttributeName}}List", cascade={"persist", "merge"})
 {% else %}
-     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%})
+     * @ORM\Column(name="{{ attribute.name }}", type="{{attributeType}}"{{attributeLength}}{{attributeDecimale}}, nullable={% if attribute.isNullAble %}true{%else%}false{%endif%})
 {% endif %}
      *
 {% if (attributeCardinality == "oneToMany") or (attributeCardinality == "manyToMany")%}

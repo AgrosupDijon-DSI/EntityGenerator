@@ -133,9 +133,18 @@ class PowerAmcMPDParserEnginev2
                                 throw new \Exception("Type not defined in Table :" . $entity->getName() . " for column : " . $attribute->getName(), 500);
                             }
 
-                            $attribute->setLength($this->getNodeValue($column->getElementsByTagName("Length")->item(0)));
+                            if($attribute->getType() == 'decimal') {
+                                $attribute->setPrecision($this->getNodeValue($column->getElementsByTagName("Length")->item(0)));
+                                $attribute->setScale($this->getNodeValue($column->getElementsByTagName("Precision")->item(0)));
+                            } else {
+                                $attribute->setLength($this->getNodeValue($column->getElementsByTagName("Length")->item(0)));
+                                $attribute->setPrecision($this->getNodeValue($column->getElementsByTagName("Precision")->item(0)));
+                            }
+                            
 
-                            $attribute->setPrecision($this->getNodeValue($column->getElementsByTagName("Precision")->item(0)));
+
+
+                            
 
                             $attribute->setIsIdentifier($this->getNodeValue($column->getElementsByTagName("Identity")->item(0)));
 
