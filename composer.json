@@ -1,8 +1,8 @@
 {
     "require": {
-        "silex/silex": "1.0.*@dev",
-        "symfony/console": "~2.1",
-        "symfony/twig-bridge": "~2.1"
+        "silex/silex": "~1.1",
+        "symfony/console": "~2.3",
+        "symfony/twig-bridge": "~2.3"
     },
 
     "autoload": {

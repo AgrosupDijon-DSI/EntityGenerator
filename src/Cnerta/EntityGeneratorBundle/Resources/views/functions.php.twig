@@ -8,10 +8,9 @@
     }
 {% endmacro getFunctionGet %}
 {% macro getFunctionSet(currentEntity, attribute, attributeType, attributeName, attributeTypeForCast) %}
-{% if attributeTypeForCast == null %}
-{% set attributeTypeForCast = getObjectForThisAttributeType(attributeType) %}
-{% endif %}
-/**
+{% if attributeTypeForCast == null %}{% set attributeTypeForCast = getObjectForThisAttributeType(attributeType) %}{% endif %}
+
+    /**
      * @param {{attributeType|getReturnTypeOfAttribute}} ${{ attributeName }} {{attribute.comment|raw|replace({"\n" : "\n     *   "})}}
      * @return {{currentEntity.name|entityName}}
      */
@@ -22,17 +21,12 @@
     }
 {% endmacro getFunctionSet %}
 {% set attributeTypeForCast = null %}
-{% if attributeCardinality == "manyToOne" %}
-{% set attributeType = targetEntity.name|entityName %}
-{% set attributeTypeForCast = targetEntity.name|entityName %}
-{% endif %}
+{% if attributeCardinality == "manyToOne" %}{% set attributeType = targetEntity.name|entityName %}{% set attributeTypeForCast = targetEntity.name|entityName %}{% endif %}
 {% if attributeCardinality == "manyToMany" or attributeCardinality == "ownerManyToMany" or attributeCardinality == "oneToMany" %}
-{% if attributeCardinality == "manyToMany" or attributeCardinality == "ownerManyToMany" %}
-{% set attributeName = attributeName ~ "List" %}
-{% endif %}
+{% if attributeCardinality == "manyToMany" or attributeCardinality == "ownerManyToMany" %}{% set attributeName = attributeName ~ "List" %}{% endif %}
 {% set targetEntityName = targetEntity.name|entityName %}
 {% set attributeType = "ArrayCollection" %}
-/**
+    /**
      * @param {{ targetEntityName }} ${{ attributeName }}
      * @return {{ currentEntity.name|entityName }}
      */

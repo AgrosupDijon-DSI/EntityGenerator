@@ -41,7 +41,8 @@ class EntityGenerator
                 $entityClass = $app['twig']->render('entity.php.twig', array(
                     "namespace" => $namespace,
                     "currentEntity" => $entity,
-                    "entityList" => $entityList
+                    "entityList" => $entityList,
+                    "createRepository" => $createRepository
                         ));
 
                 if ($createRepository) {

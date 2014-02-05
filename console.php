@@ -10,6 +10,7 @@ use Cnerta\EntityGeneratorBundle\Engine\EntityGenerator;
 use Cnerta\EntityGeneratorBundle\TwigExtentions\MyTwigExtension;
 
 
+
 //Bootstrap our Silex application
 require_once __DIR__.'/vendor/autoload.php';
 

@@ -18,8 +18,8 @@ use Doctrine\ORM\Mapping as ORM;
 {{useDoctrineArrayCollection}}
 
 /**
- * @ORM\Entity
- * @ORM\Entity(repositoryClass="{{namespace}}EntityRepository\{{currentEntity.name|entityName}}Repository")
+ * {% if createRepository == true %}@ORM\Entity(repositoryClass="{{namespace}}EntityRepository\{{currentEntity.name|entityName}}Repository"){% else %}@ORM\Entity{% endif %}
+ 
  * @ORM\Table(name="{{currentEntity.name}}")
  */
 class {{currentEntity.name|entityName}}
