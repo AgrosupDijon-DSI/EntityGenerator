@@ -59,6 +59,7 @@
 {% endfor %}    
      * )
 {% elseif attributeCardinality == "manyToMany" %}
+{% set attributeType = targetEntity.name|entityName %}
 {% set attributeName = targetEntity.name|formatAttributeName ~ "List"  %}
      * @ORM\ManyToMany(targetEntity="{{targetEntity.name|entityName}}", mappedBy="{{currentEntity.name|formatAttributeName}}List", cascade={"persist", "merge"})
 {% else %}
