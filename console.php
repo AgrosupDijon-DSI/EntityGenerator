@@ -37,7 +37,12 @@ $console->register('entity:generator')
         new InputOption('createRepository', 'Create the Repository class', InputOption::VALUE_OPTIONAL, 'FALSE'),
     ))
     ->setDescription('Generate entities from Power AMC MPD xml backup file <info>v1.0</info>')
-    ->setHelp('Usage: <info>./console.php entity:generator --file="~/model.PDM" --namespace="a/name/space" --output="~/project/"</info>')
+    ->setHelp(<<<HELP
+Usage: <info>./console.php entity:generator --file="~/model.PDM" --namespace="a/name/space" --output="~/project/"</info>
+Usage: <info>./console.php entity:generator --file="~/model.PDM" --namespace="a/name/space" --output="~/project/" --createRepository=true</info>    
+HELP
+        )
+        
     ->setCode(
         function(InputInterface $input, OutputInterface $output) use ($app) {
             $hasError = FALSE;
@@ -81,7 +86,12 @@ $console->register('entity:generator')
             }
 
             $entityGenerator = new EntityGenerator();
-            $entityGenerator->generateEntity($app, $aParserResult["entities"], $input->getOption('namespace'), $input->getOption('output'), $input->getOption('createRepository'));
+            $entityGenerator->generateEntity(
+                    $app,
+                    $aParserResult["entities"],
+                    $input->getOption('namespace'),
+                    $input->getOption('output'),
+                    $input->getOption('createRepository'));
 
 
             $output->write("\n<info>Done</info>\n");
