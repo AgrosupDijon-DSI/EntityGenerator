@@ -48,6 +48,7 @@ class PowerAmcMPDParserEnginev2
             "timestamp" => "datetime",
             "text" => "text",
             "longtext" => "text",
+            "long varchar" => "text",
             "blob" => "blob",
             "longblob" => "blob",
             "enum" => "array",
